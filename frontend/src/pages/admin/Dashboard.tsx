@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
-  Users, Cpu, Download, RefreshCw, Upload, ShieldAlert, CheckCircle,
-  AlertTriangle, BookOpen, Building2, ArrowRight
+  Users, Cpu, Download, RefreshCw, ShieldAlert, CheckCircle,
+  AlertTriangle, Building2, Calendar, Award
 } from 'lucide-react'
 import { adminApi, predictionApi, reportApi } from '../../api'
+import { Card, StatCard, Button, ProgressBar, Skeleton } from '../../components/ui'
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any>(null)
@@ -20,7 +21,7 @@ export default function AdminDashboard() {
         adminApi.getDeptComparison(),
       ])
       setData(dashRes.data)
-      setDeptData(deptRes.data)
+      setDeptData(deptRes.data || [])
     } catch {
       toast.error('Failed to load admin analytics')
     } finally {
@@ -61,8 +62,15 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="spinner" />
+      <div className="space-y-6 py-2">
+        <Skeleton className="h-28 w-full" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
@@ -72,66 +80,80 @@ export default function AdminDashboard() {
   const total = data?.total_students || 1
 
   return (
-    <div className="space-y-6">
-      {/* ── Page Banner ── */}
-      <div className="page-banner">
+    <div className="space-y-6 py-2">
+      {/* Page Banner */}
+      <Card className="p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold">Institutional Administration</h1>
-          <p>MIT School of Computing • Dept. of CSE System Overview</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-900 tracking-tight">
+            Institutional Administration
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            MIT School of Computing • Dept. of CSE System Overview
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleExportInstitutional} className="btn-banner-outline text-xs">
-            <Download className="w-4 h-4" /> Export Institutional CSV
-          </button>
-          <button
-            onClick={handleRetrain}
-            disabled={retraining}
-            className="btn-banner-cta text-xs"
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleExportInstitutional}
+            icon={<Download className="w-4 h-4" />}
           >
-            <RefreshCw className={`w-4 h-4 ${retraining ? 'animate-spin' : ''}`} />
-            {retraining ? 'Retraining...' : 'Trigger Model Retraining'}
-          </button>
+            Export Institutional CSV
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleRetrain}
+            loading={retraining}
+            icon={<RefreshCw className="w-4 h-4" />}
+          >
+            Trigger Model Retraining
+          </Button>
         </div>
-      </div>
+      </Card>
 
-      {/* ── KPI Cards ── */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="stat-card">
-          <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-muted)' }}>Total Students</div>
-          <div className="text-3xl font-extrabold" style={{ color: 'var(--color-heading)' }}>{data?.total_students}</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>{data?.total_faculty} Faculty Advisors</div>
-        </div>
-        <div className="stat-card">
-          <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-muted)' }}>At-Risk Total</div>
-          <div className="text-3xl font-extrabold text-risk-high">{data?.at_risk_count}</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>
-            {((data?.at_risk_count / total) * 100).toFixed(1)}% of student body
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-muted)' }}>Institution Avg Attendance</div>
-          <div className="text-3xl font-extrabold" style={{ color: 'var(--color-heading)' }}>{data?.overall_avg_attendance}%</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>Cross-semester average</div>
-        </div>
-        <div className="stat-card">
-          <div className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--color-muted)' }}>Institution Avg Marks</div>
-          <div className="text-3xl font-extrabold" style={{ color: 'var(--color-heading)' }}>{data?.overall_avg_marks}%</div>
-          <div className="text-xs mt-1" style={{ color: 'var(--color-muted)' }}>Overall academic performance</div>
-        </div>
+        <StatCard
+          label="Total Students"
+          value={data?.total_students}
+          caption={`${data?.total_faculty} Faculty Advisors`}
+          icon={<Users className="w-4 h-4" />}
+        />
+        <StatCard
+          label="At-Risk Total"
+          value={data?.at_risk_count}
+          caption={`${(((data?.at_risk_count || 0) / total) * 100).toFixed(1)}% of student body`}
+          icon={<ShieldAlert className="w-4 h-4" />}
+          valueClassName="text-danger"
+        />
+        <StatCard
+          label="Institution Avg Attendance"
+          value={`${data?.overall_avg_attendance}%`}
+          caption="Cross-semester average"
+          icon={<Calendar className="w-4 h-4" />}
+          valueClassName="text-accent-600"
+        />
+        <StatCard
+          label="Institution Avg Marks"
+          value={`${data?.overall_avg_marks}%`}
+          caption="Overall academic performance"
+          icon={<Award className="w-4 h-4" />}
+          valueClassName="text-brand-600"
+        />
       </div>
 
-      {/* ── ML Model Status & Risk Distribution ── */}
+      {/* ML Model Status & Risk Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Active ML Model */}
-        <div className="card p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold flex items-center gap-2" style={{ color: 'var(--color-heading)' }}>
-              <Cpu className="w-5 h-5" style={{ color: 'var(--color-primary)' }} /> Active Machine Learning Model
+        <Card className="space-y-4">
+          <div className="flex items-center justify-between border-b border-line pb-3">
+            <h2 className="text-base font-bold text-ink-900 flex items-center gap-2">
+              <Cpu className="w-5 h-5 text-brand-600" /> Active Machine Learning Model
             </h2>
             <Link
               to="/admin/models"
-              className="text-xs font-semibold hover:underline"
-              style={{ color: 'var(--color-accent)' }}
+              className="text-xs font-semibold text-brand-600 hover:underline"
             >
               Model History →
             </Link>
@@ -139,107 +161,116 @@ export default function AdminDashboard() {
 
           {model ? (
             <div className="space-y-3">
-              <div className="inner-panel grid grid-cols-2 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-mist border border-line grid grid-cols-2 gap-4 text-xs">
                 <div>
-                  <div className="font-bold uppercase tracking-wider text-[10px] mb-0.5" style={{ color: 'var(--color-muted)' }}>Algorithm</div>
-                  <div className="font-extrabold text-sm" style={{ color: 'var(--color-heading)' }}>{model.algorithm}</div>
+                  <div className="font-bold uppercase tracking-wider text-[10px] text-ink-500 mb-0.5">Algorithm</div>
+                  <div className="font-extrabold text-sm text-ink-900">{model.algorithm}</div>
                 </div>
                 <div>
-                  <div className="font-bold uppercase tracking-wider text-[10px] mb-0.5" style={{ color: 'var(--color-muted)' }}>Version</div>
-                  <div className="font-mono text-xs" style={{ color: 'var(--color-heading)' }}>{model.version}</div>
+                  <div className="font-bold uppercase tracking-wider text-[10px] text-ink-500 mb-0.5">Version</div>
+                  <div className="font-mono text-xs text-ink-900 font-semibold">{model.version}</div>
                 </div>
                 <div>
-                  <div className="font-bold uppercase tracking-wider text-[10px] mb-0.5" style={{ color: 'var(--color-muted)' }}>Accuracy</div>
-                  <div className="font-extrabold text-sm" style={{ color: 'var(--color-primary)' }}>{(model.accuracy * 100).toFixed(1)}%</div>
+                  <div className="font-bold uppercase tracking-wider text-[10px] text-ink-500 mb-0.5">Accuracy</div>
+                  <div className="font-extrabold text-sm text-brand-700 tabular-nums">{(model.accuracy * 100).toFixed(1)}%</div>
                 </div>
                 <div>
-                  <div className="font-bold uppercase tracking-wider text-[10px] mb-0.5" style={{ color: 'var(--color-muted)' }}>ROC-AUC</div>
-                  <div className="font-extrabold text-sm" style={{ color: 'var(--color-primary)' }}>{model.roc_auc.toFixed(4)}</div>
+                  <div className="font-bold uppercase tracking-wider text-[10px] text-ink-500 mb-0.5">ROC-AUC</div>
+                  <div className="font-extrabold text-sm text-brand-700 tabular-nums">{model.roc_auc.toFixed(4)}</div>
                 </div>
               </div>
-              <div className="text-[11px]" style={{ color: 'var(--color-muted)' }}>
+              <div className="text-[11px] text-ink-500">
                 Trained at: {new Date(model.trained_at).toLocaleString()}
               </div>
             </div>
           ) : (
-            <div className="inner-panel text-xs" style={{ color: 'var(--color-muted)' }}>
+            <div className="p-4 rounded-xl bg-mist border border-line text-xs text-ink-500">
               No active model detected. Trigger training to deploy.
             </div>
           )}
-        </div>
+        </Card>
 
         {/* Risk Distribution */}
-        <div className="card p-6 space-y-4">
-          <h2 className="text-base font-bold" style={{ color: 'var(--color-heading)' }}>Cohort Distribution</h2>
+        <Card className="space-y-4">
+          <h2 className="text-base font-bold text-ink-900 border-b border-line pb-3">Cohort Distribution</h2>
           <div className="space-y-4">
             {/* High Risk */}
             <div>
-              <div className="flex justify-between items-center text-xs mb-1.5">
-                <span className="flex items-center gap-2 font-medium" style={{ color: 'var(--color-heading)' }}>
-                  <ShieldAlert className="w-4 h-4 text-risk-high" /> High Risk
+              <div className="flex justify-between items-center text-xs mb-1.5 font-semibold">
+                <span className="flex items-center gap-2 text-danger">
+                  <ShieldAlert className="w-4 h-4" /> High Risk
                 </span>
-                <span className="font-bold text-risk-high">{dist.high || 0} students</span>
+                <span className="font-bold text-danger tabular-nums">{dist.high || 0} students</span>
               </div>
-              <div className="progress-bar">
-                <div className="fill-risk-high progress-fill" style={{ width: `${((dist.high || 0) / total) * 100}%` }} />
-              </div>
+              <ProgressBar
+                value={dist.high || 0}
+                max={total}
+                variant="high"
+                height="md"
+              />
             </div>
             {/* Medium Risk */}
             <div>
-              <div className="flex justify-between items-center text-xs mb-1.5">
-                <span className="flex items-center gap-2 font-medium" style={{ color: 'var(--color-heading)' }}>
-                  <AlertTriangle className="w-4 h-4 text-risk-medium" /> Medium Risk
+              <div className="flex justify-between items-center text-xs mb-1.5 font-semibold">
+                <span className="flex items-center gap-2 text-warning">
+                  <AlertTriangle className="w-4 h-4" /> Medium Risk
                 </span>
-                <span className="font-bold text-risk-medium">{dist.medium || 0} students</span>
+                <span className="font-bold text-warning tabular-nums">{dist.medium || 0} students</span>
               </div>
-              <div className="progress-bar">
-                <div className="fill-risk-medium progress-fill" style={{ width: `${((dist.medium || 0) / total) * 100}%` }} />
-              </div>
+              <ProgressBar
+                value={dist.medium || 0}
+                max={total}
+                variant="medium"
+                height="md"
+              />
             </div>
             {/* Low Risk */}
             <div>
-              <div className="flex justify-between items-center text-xs mb-1.5">
-                <span className="flex items-center gap-2 font-medium" style={{ color: 'var(--color-heading)' }}>
-                  <CheckCircle className="w-4 h-4 text-risk-low" /> Low Risk
+              <div className="flex justify-between items-center text-xs mb-1.5 font-semibold">
+                <span className="flex items-center gap-2 text-brand-700">
+                  <CheckCircle className="w-4 h-4" /> Low Risk
                 </span>
-                <span className="font-bold text-risk-low">{dist.low || 0} students</span>
+                <span className="font-bold text-brand-700 tabular-nums">{dist.low || 0} students</span>
               </div>
-              <div className="progress-bar">
-                <div className="fill-risk-low progress-fill" style={{ width: `${((dist.low || 0) / total) * 100}%` }} />
-              </div>
+              <ProgressBar
+                value={dist.low || 0}
+                max={total}
+                variant="low"
+                height="md"
+              />
             </div>
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* ── Department Breakdown Table ── */}
-      <div className="card p-6 space-y-4">
-        <h2 className="text-base font-bold flex items-center gap-2" style={{ color: 'var(--color-heading)' }}>
-          <Building2 className="w-5 h-5" style={{ color: 'var(--color-primary)' }} /> Academic Stream Breakdown
+      {/* Department Breakdown Table */}
+      <Card className="space-y-4">
+        <h2 className="text-base font-bold text-ink-900 flex items-center gap-2 border-b border-line pb-3">
+          <Building2 className="w-5 h-5 text-brand-600" /> Academic Stream Breakdown
         </h2>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-line rounded-xl">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="table-header-row">
-                <th className="py-3 px-3 font-semibold uppercase rounded-tl-lg">Department</th>
-                <th className="py-3 px-3 font-semibold uppercase">Enrolled</th>
-                <th className="py-3 px-3 font-semibold uppercase">High Risk Count</th>
-                <th className="py-3 px-3 font-semibold uppercase rounded-tr-lg">Avg Marks</th>
+              <tr className="border-b border-line bg-brand-50 text-ink-700 uppercase font-semibold">
+                <th className="py-3 px-3.5">Department</th>
+                <th className="py-3 px-3.5">Enrolled</th>
+                <th className="py-3 px-3.5">High Risk Count</th>
+                <th className="py-3 px-3.5">Avg Marks</th>
               </tr>
             </thead>
-            <tbody className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+            <tbody className="divide-y divide-line text-ink-700">
               {deptData.map((d, idx) => (
-                <tr key={idx} className="table-row transition-colors">
-                  <td className="py-3 px-3 font-semibold" style={{ color: 'var(--color-heading)' }}>{d.department}</td>
-                  <td className="py-3 px-3" style={{ color: 'var(--color-muted)' }}>{d.total}</td>
-                  <td className="py-3 px-3 font-bold text-risk-high">{d.high_risk}</td>
-                  <td className="py-3 px-3" style={{ color: 'var(--color-muted)' }}>{d.avg_marks}%</td>
+                <tr key={idx} className="hover:bg-mist transition">
+                  <td className="py-3 px-3.5 font-semibold text-ink-900">{d.department}</td>
+                  <td className="py-3 px-3.5 tabular-nums text-ink-700">{d.total}</td>
+                  <td className="py-3 px-3.5 font-bold text-danger tabular-nums">{d.high_risk}</td>
+                  <td className="py-3 px-3.5 tabular-nums text-ink-700">{d.avg_marks}%</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

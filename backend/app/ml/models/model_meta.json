@@ -1,6 +1,6 @@
 {
-  "version": "v20261026_185549",
-  "best_algorithm": "RandomForest",
+  "version": "v20261028_155038",
+  "best_algorithm": "SVM",
   "feature_columns": [
     "attendance_percentage",
     "attendance_trend",
@@ -21,253 +21,289 @@
     "semester"
   ],
   "metrics": {
-    "accuracy": 1.0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1_score": 1.0,
-    "roc_auc": 1.0,
+    "accuracy": 0.7980769230769231,
+    "precision": 0.7619047619047619,
+    "recall": 0.5,
+    "f1_score": 0.6037735849056604,
+    "roc_auc": 0.8289930555555556,
     "confusion_matrix": [
       [
-        82,
-        0
+        67,
+        5
       ],
       [
-        0,
-        22
+        16,
+        16
       ]
     ],
-    "cv_roc_auc_mean": 0.9991478891478891,
-    "cv_roc_auc_std": 0.0013241070028199927
+    "per_class_metrics": {
+      "0": {
+        "precision": 0.8072289156626506,
+        "recall": 0.9305555555555556,
+        "f1": 0.864516129032258
+      },
+      "1": {
+        "precision": 0.7619047619047619,
+        "recall": 0.5,
+        "f1": 0.6037735849056604
+      }
+    },
+    "cv_accuracy_mean": 0.8028112449799197,
+    "cv_accuracy_std": 0.048798072864527024,
+    "cv_precision_mean": 0.8005129508437904,
+    "cv_precision_std": 0.051454444748096725,
+    "cv_recall_mean": 0.8028112449799197,
+    "cv_recall_std": 0.048798072864527024,
+    "cv_f1_mean": 0.7948930805983526,
+    "cv_f1_std": 0.05024233996243358,
+    "cv_roc_auc_mean": 0.8181167108753316,
+    "cv_roc_auc_std": 0.07738050402412892
   },
   "all_metrics": {
     "LogisticRegression": {
-      "accuracy": 0.9423076923076923,
-      "precision": 0.8636363636363636,
-      "recall": 0.8636363636363636,
-      "f1_score": 0.8636363636363636,
-      "roc_auc": 0.9822616407982262,
+      "accuracy": 0.7788461538461539,
+      "precision": 0.7142857142857143,
+      "recall": 0.46875,
+      "f1_score": 0.5660377358490566,
+      "roc_auc": 0.8263888888888888,
       "confusion_matrix": [
         [
-          79,
-          3
+          66,
+          6
         ],
         [
-          3,
-          19
+          17,
+          15
         ]
       ],
-      "cv_roc_auc_mean": 0.9799696817343877,
-      "cv_roc_auc_std": 0.01638203795200412
+      "per_class_metrics": {
+        "0": {
+          "precision": 0.7951807228915663,
+          "recall": 0.9166666666666666,
+          "f1": 0.8516129032258064
+        },
+        "1": {
+          "precision": 0.7142857142857143,
+          "recall": 0.46875,
+          "f1": 0.5660377358490566
+        }
+      },
+      "cv_accuracy_mean": 0.8051921973608721,
+      "cv_accuracy_std": 0.044369303960392514,
+      "cv_precision_mean": 0.8055076076137698,
+      "cv_precision_std": 0.04725847762493578,
+      "cv_recall_mean": 0.8051921973608721,
+      "cv_recall_std": 0.044369303960392514,
+      "cv_f1_mean": 0.7969927332380207,
+      "cv_f1_std": 0.04462895843747562,
+      "cv_roc_auc_mean": 0.858551724137931,
+      "cv_roc_auc_std": 0.05372072938591819
     },
     "SVM": {
-      "accuracy": 0.9519230769230769,
-      "precision": 0.9047619047619048,
-      "recall": 0.8636363636363636,
-      "f1_score": 0.8837209302325582,
-      "roc_auc": 0.9900221729490023,
+      "accuracy": 0.7980769230769231,
+      "precision": 0.7619047619047619,
+      "recall": 0.5,
+      "f1_score": 0.6037735849056604,
+      "roc_auc": 0.8289930555555556,
       "confusion_matrix": [
         [
-          80,
-          2
+          67,
+          5
         ],
         [
-          3,
-          19
+          16,
+          16
         ]
       ],
-      "cv_roc_auc_mean": 0.9813682831329891,
-      "cv_roc_auc_std": 0.013288291872164227
+      "per_class_metrics": {
+        "0": {
+          "precision": 0.8072289156626506,
+          "recall": 0.9305555555555556,
+          "f1": 0.864516129032258
+        },
+        "1": {
+          "precision": 0.7619047619047619,
+          "recall": 0.5,
+          "f1": 0.6037735849056604
+        }
+      },
+      "cv_accuracy_mean": 0.8028112449799197,
+      "cv_accuracy_std": 0.048798072864527024,
+      "cv_precision_mean": 0.8005129508437904,
+      "cv_precision_std": 0.051454444748096725,
+      "cv_recall_mean": 0.8028112449799197,
+      "cv_recall_std": 0.048798072864527024,
+      "cv_f1_mean": 0.7948930805983526,
+      "cv_f1_std": 0.05024233996243358,
+      "cv_roc_auc_mean": 0.8181167108753316,
+      "cv_roc_auc_std": 0.07738050402412892
     },
     "RandomForest": {
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "roc_auc": 1.0,
+      "accuracy": 0.75,
+      "precision": 0.6875,
+      "recall": 0.34375,
+      "f1_score": 0.4583333333333333,
+      "roc_auc": 0.8046875,
       "confusion_matrix": [
         [
-          82,
-          0
+          67,
+          5
         ],
         [
-          0,
-          22
+          21,
+          11
         ]
       ],
-      "cv_roc_auc_mean": 0.9991478891478891,
-      "cv_roc_auc_std": 0.0013241070028199927
+      "per_class_metrics": {
+        "0": {
+          "precision": 0.7613636363636364,
+          "recall": 0.9305555555555556,
+          "f1": 0.8375
+        },
+        "1": {
+          "precision": 0.6875,
+          "recall": 0.34375,
+          "f1": 0.4583333333333333
+        }
+      },
+      "cv_accuracy_mean": 0.7931440045897877,
+      "cv_accuracy_std": 0.052825290143874354,
+      "cv_precision_mean": 0.7901334297777879,
+      "cv_precision_std": 0.06084722415544222,
+      "cv_recall_mean": 0.7931440045897877,
+      "cv_recall_std": 0.052825290143874354,
+      "cv_f1_mean": 0.7849232165932924,
+      "cv_f1_std": 0.05505862571905843,
+      "cv_roc_auc_mean": 0.832344827586207,
+      "cv_roc_auc_std": 0.05810703969254632
     },
     "GradientBoosting": {
-      "accuracy": 1.0,
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1_score": 1.0,
-      "roc_auc": 1.0,
+      "accuracy": 0.7788461538461539,
+      "precision": 0.68,
+      "recall": 0.53125,
+      "f1_score": 0.5964912280701754,
+      "roc_auc": 0.8168402777777777,
       "confusion_matrix": [
         [
-          82,
-          0
+          64,
+          8
         ],
         [
-          0,
-          22
+          15,
+          17
         ]
       ],
-      "cv_roc_auc_mean": 0.9929292929292929,
-      "cv_roc_auc_std": 0.010761250380132589
+      "per_class_metrics": {
+        "0": {
+          "precision": 0.810126582278481,
+          "recall": 0.8888888888888888,
+          "f1": 0.847682119205298
+        },
+        "1": {
+          "precision": 0.68,
+          "recall": 0.53125,
+          "f1": 0.5964912280701754
+        }
+      },
+      "cv_accuracy_mean": 0.7595238095238095,
+      "cv_accuracy_std": 0.04216765993759919,
+      "cv_precision_mean": 0.755671236598477,
+      "cv_precision_std": 0.04031035510578995,
+      "cv_recall_mean": 0.7595238095238095,
+      "cv_recall_std": 0.04216765993759919,
+      "cv_f1_mean": 0.7530873000150139,
+      "cv_f1_std": 0.04053497553653653,
+      "cv_roc_auc_mean": 0.8090769230769231,
+      "cv_roc_auc_std": 0.054327535294005774
     }
   },
-  "feature_importance": [
-    {
-      "feature": "attendance_percentage",
-      "importance": 0.2737
-    },
-    {
-      "feature": "avg_marks",
-      "importance": 0.2105
-    },
-    {
-      "feature": "assignment_submission_rate",
-      "importance": 0.1243
-    },
-    {
-      "feature": "quiz_average",
-      "importance": 0.1173
-    },
-    {
-      "feature": "attendance_velocity_30d",
-      "importance": 0.0776
-    },
-    {
-      "feature": "lms_login_frequency",
-      "importance": 0.049
-    },
-    {
-      "feature": "late_submission_rate",
-      "importance": 0.0363
-    },
-    {
-      "feature": "study_hours",
-      "importance": 0.019
-    },
-    {
-      "feature": "engagement_score",
-      "importance": 0.0183
-    },
-    {
-      "feature": "motivation_score",
-      "importance": 0.0165
-    },
-    {
-      "feature": "lms_time_spent",
-      "importance": 0.0155
-    },
-    {
-      "feature": "attendance_trend",
-      "importance": 0.0137
-    },
-    {
-      "feature": "stress_score",
-      "importance": 0.0109
-    },
-    {
-      "feature": "marks_trend",
-      "importance": 0.0074
-    },
-    {
-      "feature": "semester",
-      "importance": 0.0058
-    },
-    {
-      "feature": "lms_resource_views",
-      "importance": 0.0043
-    },
-    {
-      "feature": "backlog_count",
-      "importance": 0.0
-    }
-  ],
+  "feature_importance": [],
   "fairness": {
     "status": "warning",
     "threshold": 0.1,
     "threshold_exceeded": true,
     "all_warnings": [
-      "Demographic Parity gap across gender is 13.8% (exceeds 10% threshold). Group 'Male' has 29.4% selection rate vs 'Female' at 15.6%."
+      "Equal Opportunity gap across gender is 13.3% (exceeds 10% threshold). True positive rate for 'Female' is 53.3% vs 'Male' at 40.0%.",
+      "Demographic Parity gap across age_group is 16.8% (exceeds 10% threshold). Group '<=19' has 28.6% selection rate vs '>=22' at 11.8%.",
+      "Equal Opportunity gap across age_group is 15.6% (exceeds 10% threshold). True positive rate for '20-21' is 60.0% vs '>=22' at 44.4%."
     ],
     "by_gender": {
       "attribute": "gender",
       "groups": {
         "Female": {
-          "count": 32,
-          "selection_rate": 0.1562,
-          "true_positive_rate": 1.0,
-          "false_positive_rate": 0.0,
-          "positives_predicted": 5,
-          "actual_positives": 5
+          "count": 39,
+          "selection_rate": 0.2308,
+          "true_positive_rate": 0.5333,
+          "false_positive_rate": 0.0417,
+          "positives_predicted": 9,
+          "actual_positives": 15
         },
         "Male": {
-          "count": 34,
-          "selection_rate": 0.2941,
-          "true_positive_rate": 1.0,
-          "false_positive_rate": 0.0,
-          "positives_predicted": 10,
-          "actual_positives": 10
+          "count": 31,
+          "selection_rate": 0.1935,
+          "true_positive_rate": 0.4,
+          "false_positive_rate": 0.1538,
+          "positives_predicted": 6,
+          "actual_positives": 5
         },
         "Other": {
-          "count": 38,
-          "selection_rate": 0.1842,
-          "true_positive_rate": 1.0,
-          "false_positive_rate": 0.0,
-          "positives_predicted": 7,
-          "actual_positives": 7
+          "count": 34,
+          "selection_rate": 0.2353,
+          "true_positive_rate": 0.5,
+          "false_positive_rate": 0.0909,
+          "positives_predicted": 8,
+          "actual_positives": 12
         }
       },
-      "demographic_parity_difference": 0.1379,
-      "equal_opportunity_difference": 0.0,
+      "demographic_parity_difference": 0.0418,
+      "equal_opportunity_difference": 0.1333,
       "threshold_exceeded": true,
       "warnings": [
-        "Demographic Parity gap across gender is 13.8% (exceeds 10% threshold). Group 'Male' has 29.4% selection rate vs 'Female' at 15.6%."
+        "Equal Opportunity gap across gender is 13.3% (exceeds 10% threshold). True positive rate for 'Female' is 53.3% vs 'Male' at 40.0%."
       ]
     },
     "by_age_group": {
       "attribute": "age_group",
       "groups": {
         "20-21": {
-          "count": 33,
-          "selection_rate": 0.2121,
-          "true_positive_rate": 1.0,
-          "false_positive_rate": 0.0,
-          "positives_predicted": 7,
-          "actual_positives": 7
+          "count": 35,
+          "selection_rate": 0.2571,
+          "true_positive_rate": 0.6,
+          "false_positive_rate": 0.12,
+          "positives_predicted": 9,
+          "actual_positives": 10
         },
         "<=19": {
-          "count": 33,
-          "selection_rate": 0.2424,
-          "true_positive_rate": 1.0,
-          "false_positive_rate": 0.0,
-          "positives_predicted": 8,
-          "actual_positives": 8
+          "count": 35,
+          "selection_rate": 0.2857,
+          "true_positive_rate": 0.4615,
+          "false_positive_rate": 0.1818,
+          "positives_predicted": 10,
+          "actual_positives": 13
         },
         ">=22": {
-          "count": 38,
-          "selection_rate": 0.1842,
-          "true_positive_rate": 1.0,
+          "count": 34,
+          "selection_rate": 0.1176,
+          "true_positive_rate": 0.4444,
           "false_positive_rate": 0.0,
-          "positives_predicted": 7,
-          "actual_positives": 7
+          "positives_predicted": 4,
+          "actual_positives": 9
         }
       },
-      "demographic_parity_difference": 0.0582,
-      "equal_opportunity_difference": 0.0,
-      "threshold_exceeded": false,
-      "warnings": []
+      "demographic_parity_difference": 0.1681,
+      "equal_opportunity_difference": 0.1556,
+      "threshold_exceeded": true,
+      "warnings": [
+        "Demographic Parity gap across age_group is 16.8% (exceeds 10% threshold). Group '<=19' has 28.6% selection rate vs '>=22' at 11.8%.",
+        "Equal Opportunity gap across age_group is 15.6% (exceeds 10% threshold). True positive rate for '20-21' is 60.0% vs '>=22' at 44.4%."
+      ]
     },
     "sample_count": 104,
     "sensitive_features_comparison": {
       "with_sensitive": {
-        "accuracy": 0.9904,
-        "f1_score": 0.9767,
-        "roc_auc": 1.0,
+        "accuracy": 0.7885,
+        "f1_score": 0.6071,
+        "roc_auc": 0.8312,
         "feature_count": 18,
         "features": [
           "attendance_percentage",
@@ -289,15 +325,15 @@
           "semester",
           "age"
         ],
-        "demographic_parity_diff_gender": 0.1085,
+        "demographic_parity_diff_gender": 0.0095,
         "equal_opportunity_diff_gender": 0.1,
-        "demographic_parity_diff_age": 0.0606,
-        "equal_opportunity_diff_age": 0.1429
+        "demographic_parity_diff_age": 0.1967,
+        "equal_opportunity_diff_age": 0.1556
       },
       "without_sensitive": {
-        "accuracy": 1.0,
-        "f1_score": 1.0,
-        "roc_auc": 1.0,
+        "accuracy": 0.7981,
+        "f1_score": 0.6038,
+        "roc_auc": 0.829,
         "feature_count": 17,
         "features": [
           "attendance_percentage",
@@ -318,31 +354,213 @@
           "lms_resource_views",
           "semester"
         ],
-        "demographic_parity_diff_gender": 0.1379,
-        "equal_opportunity_diff_gender": 0.0,
-        "demographic_parity_diff_age": 0.0582,
-        "equal_opportunity_diff_age": 0.0
+        "demographic_parity_diff_gender": 0.074,
+        "equal_opportunity_diff_gender": 0.1333,
+        "demographic_parity_diff_age": 0.1395,
+        "equal_opportunity_diff_age": 0.1556
       },
       "difference": {
         "accuracy_diff": 0.0096,
-        "f1_score_diff": 0.0233,
-        "roc_auc_diff": 0.0,
-        "dp_gender_gap_change": 0.0294,
-        "eo_gender_gap_change": -0.1,
-        "dp_age_gap_change": -0.0024,
-        "eo_age_gap_change": -0.1429
+        "f1_score_diff": -0.0033,
+        "roc_auc_diff": -0.0022,
+        "dp_gender_gap_change": 0.0645,
+        "eo_gender_gap_change": 0.0333,
+        "dp_age_gap_change": -0.0572,
+        "eo_age_gap_change": 0.0
       },
       "active_configuration": "excluded"
     }
+  },
+  "pr_curve": {
+    "precision": [
+      0.3077,
+      0.3232,
+      0.3265,
+      0.3299,
+      0.3333,
+      0.3368,
+      0.3647,
+      0.3571,
+      0.3614,
+      0.3704,
+      0.3846,
+      0.3896,
+      0.4328,
+      0.4394,
+      0.4462,
+      0.4531,
+      0.4603,
+      0.4677,
+      0.4754,
+      0.4833,
+      0.4915,
+      0.5,
+      0.5179,
+      0.5273,
+      0.5686,
+      0.58,
+      0.5714,
+      0.5833,
+      0.5957,
+      0.6087,
+      0.6,
+      0.6136,
+      0.6047,
+      0.5952,
+      0.5854,
+      0.575,
+      0.5897,
+      0.6053,
+      0.6216,
+      0.6111,
+      0.6286,
+      0.6176,
+      0.6364,
+      0.6452,
+      0.6667,
+      0.6897,
+      0.6786,
+      0.6923,
+      0.7083,
+      0.6957,
+      0.7273,
+      0.7619,
+      0.75,
+      0.7368,
+      0.7222,
+      0.7059,
+      0.6875,
+      0.7333,
+      0.7143,
+      0.7692,
+      0.75,
+      0.7273,
+      0.8,
+      0.8889,
+      0.875,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "recall": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.9688,
+      0.9375,
+      0.9375,
+      0.9375,
+      0.9375,
+      0.9375,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.9062,
+      0.875,
+      0.875,
+      0.875,
+      0.875,
+      0.8438,
+      0.8438,
+      0.8125,
+      0.7812,
+      0.75,
+      0.7188,
+      0.7188,
+      0.7188,
+      0.7188,
+      0.6875,
+      0.6875,
+      0.6562,
+      0.6562,
+      0.625,
+      0.625,
+      0.625,
+      0.5938,
+      0.5625,
+      0.5312,
+      0.5,
+      0.5,
+      0.5,
+      0.4688,
+      0.4375,
+      0.4062,
+      0.375,
+      0.3438,
+      0.3438,
+      0.3125,
+      0.3125,
+      0.2812,
+      0.25,
+      0.25,
+      0.25,
+      0.2188,
+      0.2188,
+      0.1875,
+      0.1562,
+      0.125,
+      0.0938,
+      0.0625,
+      0.0312,
+      0.0
+    ],
+    "avg_precision": 0.7235148203653543
+  },
+  "calibration_curve": {
+    "fraction_of_positives": [
+      0.0769,
+      0.1364,
+      0.5714,
+      0.375,
+      0.6,
+      0.6667,
+      0.5,
+      0.6,
+      0.8333,
+      1.0
+    ],
+    "mean_predicted_value": [
+      0.0583,
+      0.1311,
+      0.2457,
+      0.3573,
+      0.4431,
+      0.5546,
+      0.6479,
+      0.7443,
+      0.8411,
+      0.9175
+    ],
+    "brier_score": 0.1486,
+    "n_bins": 10
   },
   "training_samples": 416,
   "test_samples": 104,
   "quality_report": {
     "total_rows": 520,
     "missing_values": {},
-    "outliers_fixed": 176,
+    "outliers_fixed": 230,
     "duplicates_removed": 0,
     "rows_after_cleaning": 520
   },
-  "trained_at": "2026-10-26T18:55:49.563892"
+  "trained_at": "2026-10-28T15:50:38.360736",
+  "calibration_method": "isotonic"
 }

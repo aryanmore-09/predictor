@@ -1,295 +1,73 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap');
 
-/* ============================================================
-   DESIGN TOKENS — defined once, used everywhere
-   ============================================================ */
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --color-brand-50: #F1F8F3;
+  --color-brand-100: #E3F1E7;
+  --color-brand-200: #C8E6C9;
+  --color-brand-300: #B7DCC1;
+  --color-brand-400: #66A97B;
+  --color-brand-500: #2E7D32;
+  --color-brand-600: #1B6B3A;
+  --color-brand-700: #145A30;
+  --color-brand-800: #0F4624;
+  --color-brand-900: #0A3319;
 
-  /* ── Teal institutional palette ── */
-  --color-bg:            #F4F9F8;   /* page background */
-  --color-surface:       #FFFFFF;   /* cards, panels, modals */
-  --color-border:        #DCE9E6;   /* soft teal borders */
-  --color-tint:          #E6F4F1;   /* hover rows, table headers, inner panels */
-  --color-banner:        #134E4A;   /* page-header banner background */
-  --color-primary:       #0F766E;   /* buttons, active nav, focus rings */
-  --color-primary-hover: #115E59;   /* hover state for primary */
-  --color-on-banner-btn: #2DD4BF;   /* CTA button inside banners (text: --color-banner) */
-  --color-heading:       #17312E;   /* headings, main text */
-  --color-muted:         #587370;   /* secondary text, labels */
-  --color-accent:        #3B6EA5;   /* links, secondary chart series */
+  --color-accent-50: #E6F5F6;
+  --color-accent-100: #CCEBED;
+  --color-accent-500: #0E7C86;
+  --color-accent-600: #0B6A73;
+  --color-accent-700: #095760;
 
-  /* ── Risk colors — semantic, kept separate ── */
-  --color-risk-high:   #DC2626;
-  --color-risk-medium: #D97706;
-  --color-risk-low:    #10B981;
+  --color-ink-300: #8FB59B;
+  --color-ink-500: #5F8A6D;
+  --color-ink-700: #345A44;
+  --color-ink-900: #1F3D2B;
+
+  --color-mist: #F7FBF8;
+  --color-line: #CFE5D5;
+
+  --color-warning: #B7791F;
+  --color-warning-bg: #FDF6E3;
+  --color-danger: #B42318;
+  --color-danger-bg: #FDECEA;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 /* ============================================================
-   RESET & BASE
+   RESET & BASE STYLES
    ============================================================ */
-*, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-bg);
-  color: var(--color-heading);
+  background-color: #F7FBF8;
+  color: #1F3D2B;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
 /* ============================================================
-   SCROLLBAR
+   CUSTOM SCROLLBAR
    ============================================================ */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--color-tint); }
-::-webkit-scrollbar-thumb { background: #a8c8c2; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
-
-/* ============================================================
-   SIDEBAR / NAV LINKS
-   ============================================================ */
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  color: var(--color-muted);
-  transition: all 0.15s ease;
-  font-size: 0.875rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  width: 100%;
-  text-align: left;
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
-.sidebar-link:hover {
-  background: var(--color-tint);
-  color: var(--color-heading);
+::-webkit-scrollbar-track {
+  background: #F1F8F3;
 }
-.sidebar-link.active {
-  background: var(--color-tint);
-  color: var(--color-primary);
-  font-weight: 600;
-  border-left: 3px solid var(--color-primary);
-  padding-left: 9px;
+::-webkit-scrollbar-thumb {
+  background: #B7DCC1;
+  border-radius: 9999px;
 }
-
-/* ============================================================
-   BUTTONS
-   ============================================================ */
-.btn-primary {
-  background: var(--color-primary);
-  color: white;
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
-  font-size: 0.875rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+::-webkit-scrollbar-thumb:hover {
+  background: #66A97B;
 }
-.btn-primary:hover { background: var(--color-primary-hover); box-shadow: 0 2px 8px rgba(15,118,110,0.25); }
-.btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
-
-/* Button inside a dark banner */
-.btn-banner-cta {
-  background: var(--color-on-banner-btn);
-  color: var(--color-banner);
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-weight: 700;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-  font-size: 0.875rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-banner-cta:hover { opacity: 0.88; }
-.btn-banner-cta:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Outlined white button inside dark banner */
-.btn-banner-outline {
-  background: transparent;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.45);
-  cursor: pointer;
-  transition: background 0.15s ease;
-  font-size: 0.875rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-banner-outline:hover { background: rgba(255,255,255,0.1); }
-
-.btn-secondary {
-  background: var(--color-surface);
-  color: var(--color-heading);
-  padding: 9px 18px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: 1px solid var(--color-border);
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  font-size: 0.875rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-secondary:hover { background: var(--color-tint); border-color: #b8d4ce; }
-
-/* ============================================================
-   CARDS
-   ============================================================ */
-.card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(23,49,46,0.06);
-  transition: box-shadow 0.2s ease;
-}
-.card:hover { box-shadow: 0 4px 12px rgba(23,49,46,0.1); }
-
-/* ============================================================
-   PAGE BANNER (dark header strip)
-   ============================================================ */
-.page-banner {
-  background: var(--color-banner);
-  border-radius: 12px;
-  padding: 24px 28px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.page-banner h1, .page-banner h2 {
-  color: white;
-  font-family: var(--font-display);
-  margin: 0;
-}
-.page-banner p {
-  color: #A7C7C2;
-  margin: 4px 0 0;
-  font-size: 0.875rem;
-}
-
-/* ============================================================
-   INNER PANEL (replaces dark bg-slate-950)
-   ============================================================ */
-.inner-panel {
-  background: var(--color-tint);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 16px;
-}
-
-/* ============================================================
-   FORM INPUTS
-   ============================================================ */
-.input {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  color: var(--color-heading);
-  padding: 10px 14px;
-  width: 100%;
-  font-size: 0.875rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  outline: none;
-}
-.input:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(15,118,110,0.15);
-}
-.input::placeholder { color: var(--color-muted); opacity: 0.65; }
-
-/* ============================================================
-   TABLES
-   ============================================================ */
-.table-header-row { background: var(--color-tint); color: var(--color-muted); }
-.table-row:hover  { background: var(--color-tint); cursor: default; }
-
-/* ============================================================
-   RISK UTILITIES — semantic, never theme teal
-   ============================================================ */
-.text-risk-high   { color: var(--color-risk-high);   }
-.text-risk-medium { color: var(--color-risk-medium); }
-.text-risk-low    { color: var(--color-risk-low);    }
-
-.bg-risk-high   { background: rgba(220,38,38,0.08);  border: 1px solid rgba(220,38,38,0.3);  color: var(--color-risk-high);   }
-.bg-risk-medium { background: rgba(217,119,6,0.08);  border: 1px solid rgba(217,119,6,0.3);  color: var(--color-risk-medium); }
-.bg-risk-low    { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.3); color: var(--color-risk-low);    }
-
-.fill-risk-high   { background: var(--color-risk-high);   }
-.fill-risk-medium { background: var(--color-risk-medium); }
-.fill-risk-low    { background: var(--color-risk-low);    }
-
-/* ============================================================
-   STAT / KPI CARDS
-   ============================================================ */
-.stat-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(23,49,46,0.06);
-  transition: box-shadow 0.2s ease;
-}
-.stat-card:hover { box-shadow: 0 4px 12px rgba(23,49,46,0.1); }
-
-/* ============================================================
-   LOADING SPINNER
-   ============================================================ */
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--color-border);
-  border-top-color: var(--color-primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ============================================================
-   PROGRESS BARS
-   ============================================================ */
-.progress-bar  { height: 8px; border-radius: 4px; background: var(--color-tint); overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 4px; background: var(--color-primary); transition: width 0.8s ease; }
-
-/* ============================================================
-   CHART TOOLTIP
-   ============================================================ */
-.custom-tooltip {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.8125rem;
-  color: var(--color-heading);
-  box-shadow: 0 4px 12px rgba(23,49,46,0.12);
-}
-
-/* ============================================================
-   NOTIFICATION DOT
-   ============================================================ */
-.notif-dot { width: 8px; height: 8px; background: var(--color-risk-high); border-radius: 50%; }
-
-/* ============================================================
-   LINKS
-   ============================================================ */
-a { color: var(--color-accent); text-decoration: none; }
-a:hover { text-decoration: underline; }

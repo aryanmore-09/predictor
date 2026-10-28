@@ -5,26 +5,32 @@ import { studentApi } from '../api'
 import {
   LayoutDashboard, Bell, ClipboardList, Star, Users, GraduationCap,
   Upload, Brain, LogOut, Menu, X, Info, HelpCircle, Shield,
-  ChevronDown
+  ChevronDown, FileText, CheckSquare, CalendarCheck
 } from 'lucide-react'
 import { useQuery } from '../hooks/useQuery'
 
 const navConfig = {
   student: [
     { to: '/student', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/student/attendance', icon: CalendarCheck, label: 'Attendance' },
+    { to: '/student/test-papers', icon: FileText, label: 'Test Papers' },
     { to: '/student/alerts', icon: Bell, label: 'My Alerts' },
     { to: '/student/survey', icon: ClipboardList, label: 'Wellness Survey' },
     { to: '/student/recommendations', icon: Star, label: 'Recommendations' },
   ],
   faculty: [
     { to: '/faculty', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/faculty/attendance', icon: CalendarCheck, label: 'Attendance' },
     { to: '/faculty/students', icon: Users, label: 'My Students' },
+    { to: '/faculty/verifications', icon: CheckSquare, label: 'Verifications' },
     { to: '/admin/upload', icon: Upload, label: 'Upload Data' },
   ],
   admin: [
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/admin/attendance', icon: CalendarCheck, label: 'Attendance' },
     { to: '/admin/users', icon: Users, label: 'User Management' },
     { to: '/admin/models', icon: Brain, label: 'AI Models' },
+    { to: '/faculty/verifications', icon: CheckSquare, label: 'Verifications' },
     { to: '/admin/upload', icon: Upload, label: 'Data Upload' },
     { to: '/faculty/students', icon: GraduationCap, label: 'All Students' },
   ],
@@ -50,51 +56,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'var(--color-bg)', fontFamily: 'Inter, sans-serif' }}>
+    <div className="flex min-h-screen bg-mist text-ink-900 font-sans">
       {/* ── Sidebar ── */}
       <aside
-        className="flex flex-col transition-all duration-300 ease-in-out"
-        style={{
-          width: sidebarOpen ? '252px' : '66px',
-          minHeight: '100vh',
-          background: 'var(--color-surface)',
-          borderRight: '1px solid var(--color-border)',
-          flexShrink: 0,
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          boxShadow: '1px 0 3px rgba(23,49,46,0.04)',
-        }}
+        className={`flex flex-col bg-white border-r border-line transition-all duration-300 ease-in-out shrink-0 sticky top-0 h-screen overflow-y-auto overflow-x-hidden shadow-xs z-30 ${
+          sidebarOpen ? 'w-64' : 'w-16'
+        }`}
       >
         {/* Logo */}
-        <div
-          className="p-4 flex items-center gap-3"
-          style={{ borderBottom: '1px solid var(--color-border)', minHeight: 66 }}
-        >
-          <div
-            className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center font-bold text-base"
-            style={{ background: 'var(--color-primary)', color: 'white' }}
-          >
+        <div className="p-4 flex items-center gap-3 border-b border-line min-h-[66px]">
+          <div className="shrink-0 w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
             M
           </div>
           {sidebarOpen && (
             <div className="overflow-hidden">
-              <div className="font-bold text-sm leading-tight" style={{ color: 'var(--color-heading)' }}>
+              <div className="font-bold text-sm leading-tight text-ink-900">
                 MIT School of
               </div>
-              <div className="text-xs font-semibold" style={{ color: 'var(--color-primary)' }}>
+              <div className="text-xs font-semibold text-brand-600">
                 Computing
               </div>
             </div>
           )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="ml-auto p-1 rounded-lg transition-colors"
-            style={{ color: 'var(--color-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-tint)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            className="ml-auto p-1.5 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-brand-50 transition"
+            aria-label="Toggle sidebar"
           >
             {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
           </button>
@@ -103,57 +90,73 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Role badge */}
         {sidebarOpen && (
           <div className="px-4 pt-3 pb-2">
-            <span
-              className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest"
-              style={{
-                background: 'var(--color-tint)',
-                color: 'var(--color-primary)',
-                border: '1px solid var(--color-border)',
-              }}
-            >
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest bg-brand-50 text-brand-700 border border-brand-200">
               {user?.role}
             </span>
           </div>
         )}
 
         {/* Nav links */}
-        <nav className="flex-1 px-2 py-2 space-y-0.5">
+        <nav className="flex-1 px-2.5 py-3 space-y-1">
           {nav.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/student' || to === '/faculty' || to === '/admin'}
-              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
+                  isActive
+                    ? 'bg-brand-100 text-brand-700 border-l-4 border-brand-600 shadow-xs'
+                    : 'text-ink-700 hover:bg-brand-50 hover:text-ink-900'
+                }`
+              }
             >
-              <Icon size={17} className="flex-shrink-0" />
+              <Icon size={18} className="shrink-0" />
               {sidebarOpen && <span>{label}</span>}
             </NavLink>
           ))}
         </nav>
 
         {/* Bottom utility links */}
-        <div
-          className="px-2 pb-4 space-y-0.5"
-          style={{ borderTop: '1px solid var(--color-border)', paddingTop: '10px' }}
-        >
-          <NavLink to="/privacy" className="sidebar-link">
-            <Shield size={17} className="flex-shrink-0" />
+        <div className="px-2.5 pb-4 pt-2 border-t border-line space-y-1">
+          <NavLink
+            to="/privacy"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition ${
+                isActive ? 'bg-brand-100 text-brand-700 font-semibold' : 'text-ink-500 hover:bg-brand-50 hover:text-ink-900'
+              }`
+            }
+          >
+            <Shield size={16} className="shrink-0" />
             {sidebarOpen && <span>Privacy &amp; Data Use</span>}
           </NavLink>
-          <NavLink to="/how-it-works" className="sidebar-link">
-            <HelpCircle size={17} className="flex-shrink-0" />
+          <NavLink
+            to="/how-it-works"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition ${
+                isActive ? 'bg-brand-100 text-brand-700 font-semibold' : 'text-ink-500 hover:bg-brand-50 hover:text-ink-900'
+              }`
+            }
+          >
+            <HelpCircle size={16} className="shrink-0" />
             {sidebarOpen && <span>How It Works</span>}
           </NavLink>
-          <NavLink to="/about" className="sidebar-link">
-            <Info size={17} className="flex-shrink-0" />
-            {sidebarOpen && <span>About</span>}
+          <NavLink
+            to="/about"
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition ${
+                isActive ? 'bg-brand-100 text-brand-700 font-semibold' : 'text-ink-500 hover:bg-brand-50 hover:text-ink-900'
+              }`
+            }
+          >
+            <Info size={16} className="shrink-0" />
+            {sidebarOpen && <span>About System</span>}
           </NavLink>
           <button
             onClick={handleLogout}
-            className="sidebar-link"
-            style={{ color: 'var(--color-risk-high)' }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-danger hover:bg-danger-bg transition"
           >
-            <LogOut size={17} className="flex-shrink-0" />
+            <LogOut size={16} className="shrink-0" />
             {sidebarOpen && <span>Log Out</span>}
           </button>
         </div>
@@ -161,43 +164,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content area ── */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header
-          className="sticky top-0 z-30 flex items-center justify-between px-6 h-16 gap-4"
-          style={{
-            background: 'var(--color-surface)',
-            borderBottom: '1px solid var(--color-border)',
-            boxShadow: '0 1px 3px rgba(23,49,46,0.05)',
-          }}
-        >
+        {/* Top header bar */}
+        <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 gap-4 bg-brand-600 text-white border-b border-brand-700 shadow-xs">
           <div>
-            <div
-              className="text-sm font-bold"
-              style={{ color: 'var(--color-heading)', fontFamily: 'Outfit, sans-serif' }}
-            >
+            <div className="text-sm font-bold tracking-tight text-white">
               Student Academic Performance &amp; Dropout Risk Predictor
             </div>
-            <div className="text-xs" style={{ color: 'var(--color-muted)' }}>
+            <div className="text-xs text-brand-100">
               MIT School of Computing — Dept. of Computer Science &amp; Engineering
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {/* Notification bell */}
             <button
               id="nav-notifications-btn"
               onClick={() => navigate(user?.role === 'student' ? '/student/alerts' : '#')}
-              className="relative p-2 rounded-lg transition-colors"
-              style={{ color: 'var(--color-muted)', background: 'transparent', border: 'none', cursor: 'pointer' }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-tint)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              className="relative p-2 rounded-xl text-white hover:bg-brand-700 transition"
+              aria-label="View notifications"
             >
-              <Bell size={19} />
+              <Bell size={18} />
               {unreadCount > 0 && (
-                <span
-                  className="absolute -top-0.5 -right-0.5 text-[10px] rounded-full flex items-center justify-center font-bold"
-                  style={{ width: 17, height: 17, background: 'var(--color-risk-high)', color: 'white' }}
-                >
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center border-2 border-brand-600">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -208,64 +196,40 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <button
                 id="nav-profile-btn"
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-colors"
-                style={{ color: 'var(--color-heading)', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-tint)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-white hover:bg-brand-700 transition"
               >
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm"
-                  style={{ background: 'var(--color-primary)', color: 'white' }}
-                >
+                <div className="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs shadow-xs">
                   {user?.full_name?.charAt(0).toUpperCase()}
                 </div>
-                {sidebarOpen && (
-                  <>
-                    <div className="text-left hidden sm:block">
-                      <div
-                        className="text-sm font-semibold leading-tight"
-                        style={{
-                          maxWidth: 120, overflow: 'hidden',
-                          textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          color: 'var(--color-heading)',
-                        }}
-                      >
-                        {user?.full_name}
-                      </div>
-                      <div className="text-xs capitalize" style={{ color: 'var(--color-muted)' }}>
-                        {user?.role}
-                      </div>
-                    </div>
-                    <ChevronDown size={13} style={{ color: 'var(--color-muted)' }} />
-                  </>
-                )}
+                <div className="text-left hidden sm:block">
+                  <div className="text-xs font-semibold max-w-[120px] truncate leading-tight">
+                    {user?.full_name}
+                  </div>
+                  <div className="text-[10px] text-brand-100 capitalize">
+                    {user?.role}
+                  </div>
+                </div>
+                <ChevronDown size={14} className="text-brand-200" />
               </button>
 
               {profileOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-44 rounded-xl py-2 z-50"
-                  style={{
-                    background: 'var(--color-surface)',
-                    border: '1px solid var(--color-border)',
-                    boxShadow: '0 8px 24px rgba(23,49,46,0.14)',
-                  }}
-                >
-                  <div className="px-4 py-2" style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <div className="text-sm font-semibold" style={{ color: 'var(--color-heading)' }}>
+                <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-line shadow-lg py-1.5 z-50 text-ink-900">
+                  <div className="px-4 py-2 border-b border-line">
+                    <div className="text-xs font-bold text-ink-900 truncate">
                       {user?.full_name}
                     </div>
-                    <div className="text-xs capitalize" style={{ color: 'var(--color-muted)' }}>
-                      {user?.role}
+                    <div className="text-[11px] text-ink-500 truncate">
+                      {user?.email}
                     </div>
+                    <span className="inline-block mt-1 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200">
+                      {user?.role}
+                    </span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-sm transition-colors"
-                    style={{ color: 'var(--color-risk-high)', background: 'transparent', border: 'none', cursor: 'pointer' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-tint)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold text-danger hover:bg-danger-bg transition flex items-center gap-2"
                   >
-                    Log Out
+                    <LogOut size={14} /> Log Out
                   </button>
                 </div>
               )}
@@ -274,20 +238,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto flex flex-col justify-between" style={{ background: 'var(--color-bg)' }}>
-          <div>{children}</div>
+        <main className="flex-1 p-6 sm:p-8 overflow-auto flex flex-col justify-between">
+          <div className="max-w-7xl mx-auto w-full">{children}</div>
 
           {/* Institutional Footer */}
-          <footer className="mt-12 pt-6 border-t border-slate-800/80 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <footer className="mt-12 pt-6 border-t border-line text-xs text-ink-500 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 px-6 sm:px-8 py-4">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-400">MIT School of Computing</span>
+              <span className="font-semibold text-ink-700">MIT School of Computing</span>
               <span>•</span>
               <span>Department of Computer Science &amp; Engineering</span>
             </div>
-            <div className="flex items-center gap-4 text-slate-400">
-              <NavLink to="/privacy" className="hover:text-blue-400 transition">Privacy &amp; Data Use</NavLink>
-              <NavLink to="/how-it-works" className="hover:text-blue-400 transition">How It Works</NavLink>
-              <NavLink to="/about" className="hover:text-blue-400 transition">About System</NavLink>
+            <div className="flex items-center gap-4 text-ink-500">
+              <NavLink to="/privacy" className="hover:text-brand-600 transition">Privacy &amp; Data Use</NavLink>
+              <NavLink to="/how-it-works" className="hover:text-brand-600 transition">How It Works</NavLink>
+              <NavLink to="/about" className="hover:text-brand-600 transition">About System</NavLink>
             </div>
           </footer>
         </main>

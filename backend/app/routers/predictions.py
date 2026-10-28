@@ -238,8 +238,20 @@ def trigger_training(
 def get_model_info(db: Session = Depends(get_db), current_user: User = Depends(get_faculty_or_admin)):
     meta = load_model_meta(settings.MODEL_DIR)
     model_versions = db.query(ModelVersion).order_by(ModelVersion.trained_at.desc()).limit(10).all()
+    # Expose calibration + PR curve from model_meta.json
+    pr_curve       = meta.get("pr_curve", {})
+    cal_curve      = meta.get("calibration_curve", {})
+    brier_score    = cal_curve.get("brier_score", None)
+    cv_roc_mean    = meta.get("metrics", {}).get("cv_roc_auc_mean", None)
+    cv_roc_std     = meta.get("metrics", {}).get("cv_roc_auc_std", None)
+
     return {
         "current_model": meta,
+        "pr_curve":           pr_curve,
+        "calibration_curve":  cal_curve,
+        "brier_score":        brier_score,
+        "cv_roc_auc_mean":    cv_roc_mean,
+        "cv_roc_auc_std":     cv_roc_std,
         "history": [
             {
                 "id": mv.id, "version": mv.version, "algorithm": mv.algorithm,

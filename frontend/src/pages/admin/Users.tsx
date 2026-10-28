@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { UserPlus, UserCheck, Shield, KeyRound, Check, X } from 'lucide-react'
+import { UserPlus, UserCheck, Shield } from 'lucide-react'
 import { adminApi } from '../../api'
+import { Card, Button, Input, Select, Badge, Skeleton } from '../../components/ui'
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([])
@@ -18,7 +19,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       const res = await adminApi.getUsers()
-      setUsers(res.data)
+      setUsers(res.data || [])
     } catch {
       toast.error('Failed to load user accounts')
     } finally {
@@ -59,90 +60,97 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 py-2">
+      <Card className="p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-1">User & Role Management</h1>
-          <p className="text-sm text-slate-400">Manage administrator, faculty advisor, and student user accounts.</p>
+          <h1 className="text-2xl font-bold text-ink-900 mb-1">User &amp; Role Management</h1>
+          <p className="text-sm text-ink-500">Manage administrator, faculty advisor, and student user accounts.</p>
         </div>
-        <button
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => setShowAdd(!showAdd)}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 transition"
+          icon={<UserPlus className="w-4 h-4" />}
         >
-          <UserPlus className="w-4 h-4" /> {showAdd ? 'Close Form' : 'New User Account'}
-        </button>
-      </div>
+          {showAdd ? 'Close Form' : 'New User Account'}
+        </Button>
+      </Card>
 
       {/* Add User Modal / Form */}
       {showAdd && (
-        <form onSubmit={handleCreateUser} className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-4">
-          <h2 className="text-base font-bold text-white">Create New Institutional Account</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label className="block text-slate-400 uppercase font-semibold mb-1">Full Name</label>
-              <input
+        <Card className="p-6 space-y-4">
+          <h2 className="text-base font-bold text-ink-900">Create New Institutional Account</h2>
+          <form onSubmit={handleCreateUser} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Full Name"
                 type="text"
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="e.g. Dr. Anand Verma"
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-slate-400 uppercase font-semibold mb-1">Email Address</label>
-              <input
+              <Input
+                label="Email Address"
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="username@mit.edu"
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
               />
-            </div>
-            <div>
-              <label className="block text-slate-400 uppercase font-semibold mb-1">System Role</label>
-              <select
+              <Select
+                label="System Role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
               >
                 <option value="student">Student</option>
                 <option value="faculty">Faculty Advisor</option>
                 <option value="admin">Administrator</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-slate-400 uppercase font-semibold mb-1">Initial Password</label>
-              <input
+              </Select>
+              <Input
+                label="Initial Password"
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white focus:outline-none focus:border-blue-500"
               />
             </div>
-          </div>
-          <button
-            type="submit"
-            disabled={creating}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50"
-          >
-            {creating ? 'Creating...' : 'Save User'}
-          </button>
-        </form>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowAdd(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                loading={creating}
+              >
+                Save User Account
+              </Button>
+            </div>
+          </form>
+        </Card>
       )}
 
       {/* Users Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      <Card className="p-0 overflow-hidden">
         {loading ? (
-          <div className="text-center py-16 text-slate-400 text-sm">Loading users...</div>
+          <div className="p-8 space-y-3">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 uppercase font-semibold bg-slate-950/40">
+                <tr className="border-b border-line text-ink-700 uppercase font-semibold bg-brand-50">
                   <th className="py-3.5 px-4">User</th>
                   <th className="py-3.5 px-4">Email</th>
                   <th className="py-3.5 px-4">Role</th>
@@ -150,36 +158,39 @@ export default function AdminUsers() {
                   <th className="py-3.5 px-4 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/80">
+              <tbody className="divide-y divide-line text-ink-700">
                 {users.map((u) => (
-                  <tr key={u.id} className="hover:bg-slate-800/30 transition">
-                    <td className="py-3 px-4 font-semibold text-white">{u.full_name}</td>
-                    <td className="py-3 px-4 text-slate-300">{u.email}</td>
+                  <tr key={u.id} className="hover:bg-mist transition">
+                    <td className="py-3 px-4 font-semibold text-ink-900">{u.full_name}</td>
+                    <td className="py-3 px-4 text-ink-500 font-mono">{u.email}</td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        u.role === 'admin'
-                          ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                          : u.role === 'faculty'
-                          ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
-                          : 'bg-slate-800 text-slate-300 border border-slate-700'
-                      }`}>
+                      <Badge
+                        variant={u.role === 'admin' ? 'brand' : u.role === 'faculty' ? 'accent' : 'neutral'}
+                        size="sm"
+                      >
                         {u.role}
-                      </span>
+                      </Badge>
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
-                        u.is_active ? 'text-emerald-400' : 'text-slate-500'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          u.is_active
+                            ? 'bg-brand-50 text-brand-700 border border-brand-200'
+                            : 'bg-danger-bg text-danger border border-red-200'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${u.is_active ? 'bg-brand-500' : 'bg-danger'}`} />
                         {u.is_active ? 'Active' : 'Disabled'}
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <button
+                      <Button
+                        variant={u.is_active ? 'secondary' : 'primary'}
+                        size="sm"
                         onClick={() => handleToggleActive(u.id)}
-                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium transition"
                       >
                         {u.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -187,7 +198,7 @@ export default function AdminUsers() {
             </table>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   )
 }

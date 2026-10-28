@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     # Fairness & Privacy ML Settings
     EXCLUDE_SENSITIVE_FEATURES: bool = True
 
+    # Attendance Settings
+    ATTENDANCE_THRESHOLD_PERCENT: float = 75.0
+
     class Config:
         env_file = ".env"
 

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Users, AlertTriangle, ShieldAlert, CheckCircle, RefreshCw, Download, ArrowRight, Eye } from 'lucide-react'
+import { Users, AlertTriangle, ShieldAlert, CheckCircle, RefreshCw, Download, ArrowRight, Eye, Calendar, Award } from 'lucide-react'
 import { facultyApi, predictionApi, reportApi } from '../../api'
+import { Card, StatCard, Button, RiskBadge, Skeleton } from '../../components/ui'
 
 export default function FacultyDashboard() {
   const [data, setData] = useState<any>(null)
@@ -54,147 +55,168 @@ export default function FacultyDashboard() {
   }
 
   if (loading) {
-    return <div className="text-center py-20 text-slate-400">Loading faculty cohort data...</div>
+    return (
+      <div className="space-y-6 py-2">
+        <Skeleton className="h-28 w-full" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <Skeleton className="h-72 w-full" />
+      </div>
+    )
   }
 
   const dist = data?.risk_distribution || {}
   const total = data?.total_students || 1
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 py-2">
       {/* Top Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <Card className="p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Faculty Advisor Dashboard</h1>
-          <p className="text-sm text-slate-400 mt-1">Cohort monitoring, dropout risk analytics, and intervention management.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-900 tracking-tight">
+            Faculty Advisor Dashboard
+          </h1>
+          <p className="text-sm text-ink-500 mt-1">
+            Cohort monitoring, dropout risk analytics, and intervention management.
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleExportCsv}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-2 border border-slate-700 transition"
+            icon={<Download className="w-4 h-4" />}
           >
-            <Download className="w-4 h-4" /> Export CSV
-          </button>
-          <button
+            Export CSV
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             onClick={handlePredictAll}
-            disabled={predicting}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-600/30 transition disabled:opacity-50"
+            loading={predicting}
+            icon={<RefreshCw className="w-4 h-4" />}
           >
-            <RefreshCw className={`w-4 h-4 ${predicting ? 'animate-spin' : ''}`} />
-            {predicting ? 'Running...' : 'Re-run Cohort Predictions'}
-          </button>
+            Re-run Cohort Predictions
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* KPI Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-          <div className="text-slate-400 text-xs font-semibold uppercase mb-1">Total Enrolled Students</div>
-          <div className="text-3xl font-extrabold text-white">{data?.total_students}</div>
-          <div className="text-xs text-slate-500 mt-1">Active departmental cohort</div>
-        </div>
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-          <div className="text-slate-400 text-xs font-semibold uppercase mb-1">High Risk Students</div>
-          <div className="text-3xl font-extrabold text-red-400">{dist.high || 0}</div>
-          <div className="text-xs text-slate-500 mt-1">{((dist.high || 0) / total * 100).toFixed(1)}% of cohort</div>
-        </div>
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-          <div className="text-slate-400 text-xs font-semibold uppercase mb-1">Cohort Avg Attendance</div>
-          <div className="text-3xl font-extrabold text-blue-400">{data?.class_avg_attendance}%</div>
-          <div className="text-xs text-slate-500 mt-1">Classwide average</div>
-        </div>
-        <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
-          <div className="text-slate-400 text-xs font-semibold uppercase mb-1">Cohort Avg Marks</div>
-          <div className="text-3xl font-extrabold text-purple-400">{data?.class_avg_marks}%</div>
-          <div className="text-xs text-slate-500 mt-1">Continuous assessment mean</div>
-        </div>
+        <StatCard
+          label="Total Enrolled Students"
+          value={data?.total_students}
+          caption="Active departmental cohort"
+          icon={<Users className="w-4 h-4" />}
+        />
+        <StatCard
+          label="High Risk Students"
+          value={dist.high || 0}
+          caption={`${(((dist.high || 0) / total) * 100).toFixed(1)}% of cohort`}
+          icon={<ShieldAlert className="w-4 h-4" />}
+          valueClassName="text-danger"
+        />
+        <StatCard
+          label="Cohort Avg Attendance"
+          value={`${data?.class_avg_attendance}%`}
+          caption="Classwide continuous average"
+          icon={<Calendar className="w-4 h-4" />}
+          valueClassName="text-accent-600"
+        />
+        <StatCard
+          label="Cohort Avg Marks"
+          value={`${data?.class_avg_marks}%`}
+          caption="Continuous assessment mean"
+          icon={<Award className="w-4 h-4" />}
+          valueClassName="text-brand-600"
+        />
       </div>
 
       {/* Risk Distribution Breakdown */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <h2 className="text-lg font-bold text-white">Cohort Risk Distribution Breakdown</h2>
+      <Card className="space-y-4">
+        <h2 className="text-base font-bold text-ink-900">Cohort Risk Distribution Breakdown</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/30 flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-danger-bg border border-red-200 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold uppercase text-red-400">High Risk (&gt;65% dropout prob)</div>
-              <div className="text-2xl font-extrabold text-red-300 mt-1">{dist.high || 0} students</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-danger">High Risk (&gt;65% dropout)</div>
+              <div className="text-2xl font-extrabold text-danger mt-1 tabular-nums">{dist.high || 0} students</div>
             </div>
-            <ShieldAlert className="w-8 h-8 text-red-400" />
+            <ShieldAlert className="w-8 h-8 text-danger shrink-0" />
           </div>
-          <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 flex items-center justify-between">
+
+          <div className="p-4 rounded-xl bg-warning-bg border border-amber-200 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold uppercase text-amber-400">Medium Risk (35%–65%)</div>
-              <div className="text-2xl font-extrabold text-amber-300 mt-1">{dist.medium || 0} students</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-warning">Medium Risk (35%–65%)</div>
+              <div className="text-2xl font-extrabold text-warning mt-1 tabular-nums">{dist.medium || 0} students</div>
             </div>
-            <AlertTriangle className="w-8 h-8 text-amber-400" />
+            <AlertTriangle className="w-8 h-8 text-warning shrink-0" />
           </div>
-          <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 flex items-center justify-between">
+
+          <div className="p-4 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-between">
             <div>
-              <div className="text-xs font-bold uppercase text-emerald-400">Low Risk (&lt;35%)</div>
-              <div className="text-2xl font-extrabold text-emerald-300 mt-1">{dist.low || 0} students</div>
+              <div className="text-xs font-bold uppercase tracking-wider text-brand-700">Low Risk (&lt;35%)</div>
+              <div className="text-2xl font-extrabold text-brand-700 mt-1 tabular-nums">{dist.low || 0} students</div>
             </div>
-            <CheckCircle className="w-8 h-8 text-emerald-400" />
+            <CheckCircle className="w-8 h-8 text-brand-600 shrink-0" />
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Priority At-Risk Table */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <div className="flex items-center justify-between">
+      <Card className="space-y-4">
+        <div className="flex items-center justify-between border-b border-line pb-3">
           <div>
-            <h2 className="text-lg font-bold text-white">Priority Students Needing Proactive Attention</h2>
-            <p className="text-xs text-slate-400">Ranked by calculated dropout probability</p>
+            <h2 className="text-base font-bold text-ink-900">Priority Students Needing Proactive Attention</h2>
+            <p className="text-xs text-ink-500">Ranked by calculated dropout probability</p>
           </div>
-          <Link to="/faculty/students" className="text-xs text-blue-400 hover:underline flex items-center gap-1">
+          <Link to="/faculty/students" className="text-xs text-brand-600 hover:underline font-semibold flex items-center gap-1">
             View All Students <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto border border-line rounded-xl">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-800 text-slate-400 uppercase font-semibold">
-                <th className="py-3 px-3">Student</th>
-                <th className="py-3 px-3">Semester</th>
-                <th className="py-3 px-3">Risk Tier</th>
-                <th className="py-3 px-3">Dropout Prob</th>
-                <th className="py-3 px-3">Attendance</th>
-                <th className="py-3 px-3">Avg Marks</th>
-                <th className="py-3 px-3 text-right">Action</th>
+              <tr className="border-b border-line bg-brand-50 text-ink-700 uppercase font-semibold">
+                <th className="py-3 px-3.5">Student</th>
+                <th className="py-3 px-3.5">Semester</th>
+                <th className="py-3 px-3.5">Risk Tier</th>
+                <th className="py-3 px-3.5">Dropout Prob</th>
+                <th className="py-3 px-3.5">Attendance</th>
+                <th className="py-3 px-3.5">Avg Marks</th>
+                <th className="py-3 px-3.5 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/80">
+            <tbody className="divide-y divide-line text-ink-700">
               {data?.at_risk_students?.slice(0, 10).map((s: any) => (
-                <tr key={s.id} className="hover:bg-slate-800/30 transition">
-                  <td className="py-3 px-3">
-                    <div className="font-semibold text-white">{s.full_name}</div>
-                    <div className="text-[11px] text-slate-400">{s.student_id}</div>
+                <tr key={s.id} className="hover:bg-mist transition">
+                  <td className="py-3 px-3.5 font-semibold text-ink-900">
+                    <div>{s.full_name}</div>
+                    <div className="text-[11px] text-ink-500 font-mono font-normal">{s.student_id}</div>
                   </td>
-                  <td className="py-3 px-3 text-slate-300">Sem {s.semester}</td>
-                  <td className="py-3 px-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                      s.risk_level === 'high'
-                        ? 'bg-red-500/10 text-red-400 border border-red-500/30'
-                        : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                    }`}>
-                      {s.risk_level}
-                    </span>
+                  <td className="py-3 px-3.5 text-ink-700">Sem {s.semester}</td>
+                  <td className="py-3 px-3.5">
+                    <RiskBadge risk={s.risk_level} size="sm" />
                   </td>
-                  <td className="py-3 px-3 font-semibold text-slate-200">
+                  <td className="py-3 px-3.5 font-semibold text-ink-900 tabular-nums">
                     {s.dropout_probability ? (s.dropout_probability * 100).toFixed(1) + '%' : 'N/A'}
                   </td>
-                  <td className="py-3 px-3 text-slate-300">
-                    <span className={s.attendance_percentage < 75 ? 'text-red-400 font-bold' : ''}>
+                  <td className="py-3 px-3.5 tabular-nums">
+                    <span className={s.attendance_percentage < 75 ? 'text-danger font-bold' : 'text-ink-700'}>
                       {s.attendance_percentage ? s.attendance_percentage + '%' : 'N/A'}
                     </span>
                   </td>
-                  <td className="py-3 px-3 text-slate-300">
+                  <td className="py-3 px-3.5 text-ink-700 tabular-nums">
                     {s.avg_marks ? s.avg_marks + '%' : 'N/A'}
                   </td>
-                  <td className="py-3 px-3 text-right">
+                  <td className="py-3 px-3.5 text-right">
                     <Link
                       to={`/faculty/students/${s.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-semibold border border-blue-500/30 transition"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-semibold border border-brand-200 transition"
                     >
                       <Eye className="w-3.5 h-3.5" /> Details
                     </Link>
@@ -204,7 +226,7 @@ export default function FacultyDashboard() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
   )
 }

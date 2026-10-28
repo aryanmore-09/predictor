@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from .database import engine, Base
-from .routers import auth, students, faculty, admin, predictions, upload, reports, alerts
+from .routers import auth, students, faculty, admin, predictions, upload, reports, alerts, test_papers, attendance
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -44,6 +44,8 @@ app.include_router(predictions.router)
 app.include_router(upload.router)
 app.include_router(reports.router)
 app.include_router(alerts.router)
+app.include_router(test_papers.router)
+app.include_router(attendance.router)
 
 from fastapi.responses import RedirectResponse
 

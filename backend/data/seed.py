@@ -64,15 +64,22 @@ def random_name():
     return f"{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}"
 
 
+def _logistic(x):
+    """Numerically stable logistic function."""
+    return 1.0 / (1.0 + np.exp(-np.clip(x, -20, 20)))
+
+
 def generate_student_profile(idx: int, semester: int) -> dict:
     """
-    Generate a correlated student profile.
-    Students are categorized into 3 archetypes:
-    - High performer (30%): high attendance, high marks, low stress, high engagement
-    - Average (50%): moderate everything
-    - At-risk (20%): low attendance, low marks, high stress, low motivation
+    Generate a realistic student profile with overlapping archetypes.
+    Dropout is a smooth logistic function of features + Gaussian noise,
+    NOT a fixed per-archetype threshold.  ~6% random label flips simulate
+    hidden personal factors (family crisis, health issues, etc.).
+    Target distribution: ~55% Low-risk, ~30% Medium, ~15% High-risk dropout.
     """
-    r = random.random()
+    rng = np.random.RandomState(idx * 17 + semester * 31 + 7)  # reproducible per student
+
+    r = rng.random()
     if r < 0.30:
         archetype = "high"
     elif r < 0.80:
@@ -80,85 +87,115 @@ def generate_student_profile(idx: int, semester: int) -> dict:
     else:
         archetype = "at_risk"
 
+    # ---- Overlapping feature ranges (σ large enough that archetypes overlap) ----
     if archetype == "high":
-        attendance_base = np.random.normal(88, 5)
-        marks_base = np.random.normal(78, 8)
-        stress = random.randint(1, 3)
-        motivation = random.randint(3, 5)
-        study_hours = np.random.normal(5, 1)
-        lms_login = np.random.normal(7, 1.5)
-        sub_rate = np.random.normal(95, 4)
-        late_rate = np.random.normal(5, 3)
-        is_dropout = 0
+        attendance_base = rng.normal(85, 8)        # was 88±5  → wider
+        marks_base      = rng.normal(75, 10)       # was 78±8  → wider
+        stress          = int(np.clip(rng.normal(2, 1), 1, 5))
+        motivation      = int(np.clip(rng.normal(4, 1), 1, 5))
+        study_hours     = rng.normal(4.5, 1.2)
+        lms_login       = rng.normal(6.5, 2.0)
+        sub_rate        = rng.normal(92, 7)
+        late_rate       = rng.normal(6, 5)
     elif archetype == "average":
-        attendance_base = np.random.normal(76, 8)
-        marks_base = np.random.normal(62, 10)
-        stress = random.randint(2, 4)
-        motivation = random.randint(2, 4)
-        study_hours = np.random.normal(3, 1)
-        lms_login = np.random.normal(4, 1.5)
-        sub_rate = np.random.normal(82, 8)
-        late_rate = np.random.normal(15, 8)
-        is_dropout = 1 if random.random() < 0.1 else 0
+        attendance_base = rng.normal(74, 10)       # overlaps with both
+        marks_base      = rng.normal(60, 12)
+        stress          = int(np.clip(rng.normal(3, 1), 1, 5))
+        motivation      = int(np.clip(rng.normal(3, 1), 1, 5))
+        study_hours     = rng.normal(3.0, 1.2)
+        lms_login       = rng.normal(4.0, 2.0)
+        sub_rate        = rng.normal(78, 10)
+        late_rate       = rng.normal(18, 10)
     else:  # at_risk
-        attendance_base = np.random.normal(58, 10)
-        marks_base = np.random.normal(42, 12)
-        stress = random.randint(3, 5)
-        motivation = random.randint(1, 3)
-        study_hours = np.random.normal(1.5, 0.8)
-        lms_login = np.random.normal(2, 1)
-        sub_rate = np.random.normal(60, 12)
-        late_rate = np.random.normal(35, 10)
-        is_dropout = 1 if random.random() < 0.65 else 0
+        attendance_base = rng.normal(62, 11)       # overlaps with average
+        marks_base      = rng.normal(48, 14)
+        stress          = int(np.clip(rng.normal(4, 1), 1, 5))
+        motivation      = int(np.clip(rng.normal(2, 1), 1, 5))
+        study_hours     = rng.normal(1.8, 1.0)
+        lms_login       = rng.normal(2.5, 1.5)
+        sub_rate        = rng.normal(58, 14)
+        late_rate       = rng.normal(38, 12)
 
-    # Clip values
-    attendance_base = np.clip(attendance_base, 30, 100)
-    marks_base = np.clip(marks_base, 20, 100)
-    study_hours = np.clip(study_hours, 0.5, 10)
-    lms_login = np.clip(lms_login, 0, 14)
-    sub_rate = np.clip(sub_rate, 20, 100)
-    late_rate = np.clip(late_rate, 0, 80)
+    # Clip to valid ranges
+    attendance_base = float(np.clip(attendance_base, 30, 100))
+    marks_base      = float(np.clip(marks_base,      20, 100))
+    study_hours     = float(np.clip(study_hours,     0.5, 10))
+    lms_login       = float(np.clip(lms_login,       0,   14))
+    sub_rate        = float(np.clip(sub_rate,        10, 100))
+    late_rate       = float(np.clip(late_rate,       0,   80))
+
+    # ---- Smooth logistic dropout probability (NO hard thresholds) ----
+    # Linear combination of standardised features + structured noise
+    att_z    = (attendance_base - 74) / 12.0
+    marks_z  = (marks_base      - 62) / 14.0
+    stress_z = (stress          - 3)  /  1.0
+    motiv_z  = (motivation      - 3)  /  1.0
+    sub_z    = (sub_rate        - 75) / 14.0
+    study_z  = (study_hours     - 3)  /  1.2
+    lms_z    = (lms_login       - 4)  /  2.0
+
+    # logit = negative of academic performance proxy + positive of stress
+    logit = (
+        -0.8 * att_z
+        - 1.0 * marks_z
+        + 0.5 * stress_z
+        - 0.4 * motiv_z
+        - 0.5 * sub_z
+        - 0.3 * study_z
+        - 0.2 * lms_z
+        + rng.normal(0, 0.9)   # irreducible noise (hidden factors)
+        - 1.5                  # intercept → pushes base rate down to ~15-20%
+    )
+    p_dropout = _logistic(logit)
+
+    # Stochastic label from probability
+    is_dropout = int(rng.random() < p_dropout)
+
+    # ---- ~6% random label flip (personal crises, recovery) ----
+    if rng.random() < 0.06:
+        is_dropout = 1 - is_dropout
 
     # Subject-level variation
     subjects_data = []
     for subj in SUBJECTS:
-        subj_att = np.clip(attendance_base + np.random.normal(0, 5), 20, 100)
-        subj_marks = np.clip(marks_base + np.random.normal(0, 7), 0, 100)
-        total_classes = random.randint(40, 60)
-        attended = int(total_classes * subj_att / 100)
-        total_asgn = random.randint(5, 10)
-        submitted = int(total_asgn * sub_rate / 100)
-        late = min(int(submitted * late_rate / 100), submitted)
+        subj_att   = float(np.clip(attendance_base + rng.normal(0, 6), 20, 100))
+        subj_marks = float(np.clip(marks_base      + rng.normal(0, 8),  0, 100))
+        total_classes = rng.randint(40, 60)
+        attended      = int(total_classes * subj_att / 100)
+        total_asgn    = rng.randint(5, 10)
+        submitted     = int(total_asgn * sub_rate / 100)
+        late          = min(int(submitted * late_rate / 100), submitted)
         subjects_data.append({
-            "subject": subj,
-            "attendance": round(subj_att, 1),
-            "total_classes": total_classes,
-            "attended_classes": attended,
-            "marks": round(subj_marks, 1),
-            "total_assignments": total_asgn,
+            "subject":              subj,
+            "attendance":          round(subj_att, 1),
+            "total_classes":       total_classes,
+            "attended_classes":    attended,
+            "marks":               round(subj_marks, 1),
+            "total_assignments":   total_asgn,
             "submitted_assignments": submitted,
-            "late_submissions": late,
-            "quiz_avg": round(np.clip(marks_base + np.random.normal(0, 8), 0, 100), 1),
+            "late_submissions":    late,
+            "quiz_avg":            round(float(np.clip(marks_base + rng.normal(0, 9), 0, 100)), 1),
         })
 
-    engagement_score = min(100, (lms_login * 5 + study_hours * 3 + random.randint(5, 20) * 2))
+    engagement_score = float(min(100, (lms_login * 5 + study_hours * 3 + rng.randint(5, 20) * 2)))
 
     return {
-        "idx": idx,
-        "archetype": archetype,
-        "semester": semester,
-        "year": (semester + 1) // 2,
-        "age": random.randint(18, 24),
-        "gender": random.choice(["Male", "Female", "Other"]),
-        "attendance_base": round(float(attendance_base), 1),
-        "marks_base": round(float(marks_base), 1),
-        "stress": stress,
-        "motivation": motivation,
-        "study_hours": round(float(study_hours), 1),
-        "lms_login": round(float(lms_login), 1),
-        "engagement_score": round(float(engagement_score), 1),
-        "subjects_data": subjects_data,
-        "is_dropout": is_dropout,
+        "idx":             idx,
+        "archetype":       archetype,
+        "semester":        semester,
+        "year":            (semester + 1) // 2,
+        "age":             rng.randint(18, 24),
+        "gender":          rng.choice(["Male", "Female", "Other"]),
+        "attendance_base": round(attendance_base, 1),
+        "marks_base":      round(marks_base, 1),
+        "stress":          stress,
+        "motivation":      motivation,
+        "study_hours":     round(study_hours, 1),
+        "lms_login":       round(lms_login, 1),
+        "engagement_score": round(engagement_score, 1),
+        "subjects_data":   subjects_data,
+        "is_dropout":      is_dropout,
+        "p_dropout":       round(float(p_dropout), 4),
     }
 
 
@@ -290,9 +327,9 @@ def seed_database():
                 profile["archetype"] = archetype
                 # Adjust based on archetype
                 if archetype == "at_risk":
-                    profile["marks_base"] = max(35, profile["marks_base"] - 15)
-                    profile["attendance_base"] = max(50, profile["attendance_base"] - 15)
-                    profile["is_dropout"] = 1
+                    profile["marks_base"] = max(35, profile["marks_base"] - 10)
+                    profile["attendance_base"] = max(50, profile["attendance_base"] - 10)
+                    # Don't force is_dropout=1 — let logistic function decide
 
                 demo_student_profiles.append((email, profile))
                 student_idx += 1
@@ -409,8 +446,8 @@ def seed_database():
                     workload_level=random.randint(2, 5),
                     study_hours_per_day=profile["study_hours"],
                     motivation_level=profile["motivation"],
-                    support_needed=profile["archetype"] == "at_risk",
-                    support_type="Academic" if profile["archetype"] == "at_risk" else None,
+                    support_needed=profile.get("is_dropout", 0) == 1,
+                    support_type="Academic" if profile.get("is_dropout", 0) == 1 else None,
                     consent_given=True,
                     consent_timestamp=datetime.utcnow() - timedelta(days=random.randint(5, 30)),
                 ))
@@ -458,9 +495,16 @@ def seed_database():
                 if matching:
                     feats["is_dropout"] = matching["is_dropout"]
                 else:
+                    # Probabilistic fallback — not a hard threshold
                     score = feats.get("avg_marks", 60)
-                    att = feats.get("attendance_percentage", 75)
-                    feats["is_dropout"] = 1 if (score < 45 or att < 60) else 0
+                    att   = feats.get("attendance_percentage", 75)
+                    stress = feats.get("stress_score", 3)
+                    att_z   = (att   - 74) / 12.0
+                    marks_z = (score - 62) / 14.0
+                    s_z     = (stress - 3) / 1.0
+                    logit   = -0.8*att_z - 1.0*marks_z + 0.5*s_z - 1.5
+                    p_fb    = 1.0 / (1.0 + np.exp(-np.clip(logit, -20, 20)))
+                    feats["is_dropout"] = int(np.random.random() < p_fb)
                 rows.append(feats)
 
         if len(rows) >= 50:
