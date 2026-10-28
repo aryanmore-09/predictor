@@ -2,12 +2,12 @@
  * Consistent institutional chart color tokens for Recharts
  */
 export const CHART_PALETTE = [
-  '#2E7D32', // brand-500
-  '#0E7C86', // accent-500
-  '#66A97B', // brand-400
-  '#B7DCC1', // brand-300
-  '#145A30', // brand-700
-  '#5BB7BF', // accent light
+  '#0F766E', // teal-600 (brand)
+  '#3B82F6', // blue
+  '#B7791F', // amber
+  '#64748B', // slate
+  '#0B5F59', // teal-700
+  '#5BB7BF', // light teal
 ]
 
 export const RISK_CHART_COLORS = {

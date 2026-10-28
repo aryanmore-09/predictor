@@ -52,12 +52,36 @@ def explain_prediction(features: Dict[str, float], model_dir: str) -> List[Dict]
         if feat not in importance_map:
             continue
         importance = importance_map[feat]
-        # Contextual direction
-        if feat in ["attendance_percentage", "avg_marks", "assignment_submission_rate",
-                    "quiz_average", "engagement_score", "motivation_score", "study_hours"]:
-            direction = "negative" if value < 60 else "positive"
-        elif feat in ["stress_score", "late_submission_rate", "backlog_count"]:
-            direction = "negative" if value > 2 else "positive"
+        # Contextual direction using each feature's own scale & semantics.
+        # Higher-is-better percentage features (threshold below which it counts as risk)
+        higher_is_better = {
+            "attendance_percentage": 75.0,
+            "avg_marks": 60.0,
+            "assignment_submission_rate": 80.0,
+            "quiz_average": 50.0,
+            "engagement_score": 40.0,
+        }
+        # Higher-is-worse features (threshold above which it counts as risk)
+        higher_is_worse = {
+            "late_submission_rate": 30.0,
+            "backlog_count": 0.0,
+        }
+        if feat in higher_is_better:
+            direction = "negative" if value < higher_is_better[feat] else "positive"
+        elif feat in higher_is_worse:
+            direction = "negative" if value > higher_is_worse[feat] else "positive"
+        elif feat == "motivation_score":  # 1-5, higher is better
+            direction = "negative" if value <= 2 else ("positive" if value >= 4 else "neutral")
+        elif feat == "stress_score":  # 1-5, higher is worse
+            direction = "negative" if value >= 4 else ("positive" if value <= 2 else "neutral")
+        elif feat == "study_hours":  # hours/day
+            direction = "negative" if value < 2 else ("positive" if value >= 4 else "neutral")
+        elif feat in ["lms_login_frequency", "lms_time_spent"]:
+            direction = "negative" if value < 2 else "positive"
+        elif feat == "lms_resource_views":
+            direction = "negative" if value < 10 else "positive"
+        elif feat in ["attendance_trend", "attendance_velocity_30d", "marks_trend"]:
+            direction = "negative" if value < 0 else ("positive" if value > 0 else "neutral")
         else:
             direction = "neutral"
 

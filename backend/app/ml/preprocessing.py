@@ -53,7 +53,7 @@ def build_features_from_db(db, student_id: int) -> Dict[str, Any]:
         return {}
 
     # Attendance
-    att_records = db.query(AttendanceRecord).filter(AttendanceRecord.student_id == student_id).all()
+    att_records = db.query(AttendanceRecord).filter(AttendanceRecord.student_id == student_id).order_by(AttendanceRecord.year, AttendanceRecord.semester).all()
     if att_records:
         att_pcts = [r.attendance_percentage for r in att_records]
         avg_att = np.mean(att_pcts)
@@ -90,7 +90,7 @@ def build_features_from_db(db, student_id: int) -> Dict[str, Any]:
         attendance_velocity = 0.0
 
     # Marks
-    mark_records = db.query(AcademicRecord).filter(AcademicRecord.student_id == student_id).all()
+    mark_records = db.query(AcademicRecord).filter(AcademicRecord.student_id == student_id).order_by(AcademicRecord.year, AcademicRecord.semester).all()
     if mark_records:
         mark_pcts = [(r.total_marks or 0) / (r.max_marks or 100) * 100 for r in mark_records]
         avg_marks = np.mean(mark_pcts)

@@ -3,7 +3,8 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     APP_NAME: str = "Student Academic Performance & Dropout Risk Predictor"
-    SECRET_KEY: str = "mit-cse-secret-key-change-in-production"
+    # ⚠️ Development fallback only. In production, always set SECRET_KEY via env / .env.
+    SECRET_KEY: str = "dev-only-insecure-secret-key-change-before-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
 

@@ -17,3 +17,9 @@ uploads/
 node_modules/
 frontend/dist/
 frontend/node_modules/
+
+# ML model artifacts (regenerated via `python -m data.seed`)
+*.joblib
+backend/app/ml/models/model_meta.json
+backend/app/ml/models/feature_columns.json
+

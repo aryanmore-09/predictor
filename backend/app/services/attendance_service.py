@@ -705,38 +705,112 @@ class AttendanceService:
 
     @staticmethod
     def get_defaulters_list(db: Session, threshold: Optional[float] = None) -> List[Dict[str, Any]]:
-        """Students whose attendance is below the institutional threshold."""
+        """
+        Students whose attendance is below the institutional threshold.
+
+        Aggregated in bulk (a handful of GROUP BY queries) instead of looping
+        per student, so this stays fast even with tens of thousands of
+        attendance records.
+        """
+        from sqlalchemy import case
+
         if threshold is None:
             threshold = AttendanceService.get_threshold(db)
 
-        students = db.query(Student).all()
+        # 1. Bulk per-student totals from dated session records
+        session_rows = db.query(
+            SessionAttendanceRecord.student_id.label("sid"),
+            func.count(SessionAttendanceRecord.id).label("total"),
+            func.sum(case((SessionAttendanceRecord.status.in_(("Present", "Late")), 1), else_=0)).label("attended"),
+        ).filter(
+            SessionAttendanceRecord.status.in_(("Present", "Late", "Absent"))
+        ).group_by(SessionAttendanceRecord.student_id).all()
+
+        totals: Dict[int, Tuple[int, int]] = {}
+        for sid, total, attended in session_rows:
+            totals[sid] = (int(total or 0), int(attended or 0))
+
+        # 2. Fallback to aggregate records for students with no session records
+        agg_rows = db.query(
+            AttendanceRecord.student_id,
+            func.sum(AttendanceRecord.total_classes),
+            func.sum(AttendanceRecord.attended_classes),
+        ).group_by(AttendanceRecord.student_id).all()
+        for sid, total, attended in agg_rows:
+            if sid not in totals:
+                totals[sid] = (int(total or 0), int(attended or 0))
+
+        # 3. Find students below threshold
+        below: List[Tuple[int, int, int, float]] = []
+        for sid, (total, attended) in totals.items():
+            if total <= 0:
+                continue
+            pct = round(attended / total * 100.0, 1)
+            if pct < threshold:
+                below.append((sid, total, attended, pct))
+
+        if not below:
+            return []
+
+        at_risk_ids = [b[0] for b in below]
+
+        # 4. Weakest subject per at-risk student (one grouped query)
+        subj_rows = db.query(
+            SessionAttendanceRecord.student_id,
+            ClassSession.subject,
+            func.count(SessionAttendanceRecord.id),
+            func.sum(case((SessionAttendanceRecord.status.in_(("Present", "Late")), 1), else_=0)),
+        ).join(
+            ClassSession, ClassSession.id == SessionAttendanceRecord.session_id
+        ).filter(
+            SessionAttendanceRecord.student_id.in_(at_risk_ids),
+            SessionAttendanceRecord.status.in_(("Present", "Late", "Absent")),
+        ).group_by(SessionAttendanceRecord.student_id, ClassSession.subject).all()
+
+        weakest: Dict[int, Tuple[str, float]] = {}
+        for sid, subject, total, attended in subj_rows:
+            total = int(total or 0)
+            attended = int(attended or 0)
+            if total <= 0:
+                continue
+            pct = round(attended / total * 100.0, 1)
+            if sid not in weakest or pct < weakest[sid][1]:
+                weakest[sid] = (subject, pct)
+
+        # 5. Latest predicted risk per at-risk student (one query)
+        pred_rows = db.query(
+            Prediction.student_id, Prediction.risk_level, Prediction.created_at
+        ).filter(
+            Prediction.student_id.in_(at_risk_ids)
+        ).order_by(Prediction.student_id, Prediction.created_at.desc()).all()
+        risk_by: Dict[int, str] = {}
+        for sid, risk, _ in pred_rows:
+            if sid not in risk_by:
+                risk_by[sid] = risk.value if hasattr(risk, "value") else risk
+
+        # 6. Students metadata
+        students = {s.id: s for s in db.query(Student).all()}
+
+        # 7. Assemble
         defaulters = []
-
-        for s in students:
-            summary = AttendanceService.get_student_summary(db, s.id)
-            if summary["overall_percentage"] < threshold:
-                subjects = AttendanceService.get_student_subjects(db, s.id)
-                weakest = subjects[0] if subjects else {"subject": "General", "percentage": summary["overall_percentage"]}
-                needed, _ = AttendanceService.calculate_threshold_gap(
-                    summary["attended_classes"], summary["total_classes"], threshold
-                )
-
-                # Get predicted risk level
-                pred = db.query(Prediction).filter(Prediction.student_id == s.id).order_by(Prediction.created_at.desc()).first()
-                risk = pred.risk_level.value if pred else "medium"
-
-                defaulters.append({
-                    "student_id": s.id,
-                    "student_code": s.student_id,
-                    "full_name": s.full_name,
-                    "department": s.department or "Computer Science & Engineering",
-                    "semester": s.semester or 5,
-                    "overall_attendance": summary["overall_percentage"],
-                    "weakest_subject": weakest["subject"],
-                    "weakest_subject_pct": weakest["percentage"],
-                    "classes_needed": needed,
-                    "risk_level": risk
-                })
+        for sid, total, attended, pct in below:
+            s = students.get(sid)
+            if not s:
+                continue
+            w_subject, w_pct = weakest.get(sid, ("General", pct))
+            needed, _ = AttendanceService.calculate_threshold_gap(attended, total, threshold)
+            defaulters.append({
+                "student_id": sid,
+                "student_code": s.student_id,
+                "full_name": s.full_name,
+                "department": s.department or "Computer Science & Engineering",
+                "semester": s.semester or 5,
+                "overall_attendance": pct,
+                "weakest_subject": w_subject,
+                "weakest_subject_pct": w_pct,
+                "classes_needed": needed,
+                "risk_level": risk_by.get(sid, "medium"),
+            })
 
         return sorted(defaulters, key=lambda x: x["overall_attendance"])
 

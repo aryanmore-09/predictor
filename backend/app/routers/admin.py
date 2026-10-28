@@ -26,37 +26,48 @@ router = APIRouter(prefix="/api/admin", tags=["admin"])
 @router.get("/dashboard")
 def admin_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
     students = db.query(Student).all()
-    faculty_list = db.query(Faculty).all()
+    faculty_count = db.query(Faculty).count()
+
+    # Latest prediction per student in a single query
+    preds = db.query(Prediction).order_by(Prediction.student_id, Prediction.created_at.desc()).all()
+    latest_risk = {}
+    for p in preds:
+        if p.student_id not in latest_risk:
+            latest_risk[p.student_id] = p.risk_level.value
 
     risk_dist = {"low": 0, "medium": 0, "high": 0, "unassessed": 0}
-    att_list = []
-    marks_list = []
-
     for s in students:
-        pred = db.query(Prediction).filter(Prediction.student_id == s.id).order_by(Prediction.created_at.desc()).first()
-        rl = pred.risk_level.value if pred else None
+        rl = latest_risk.get(s.id)
         if rl:
             risk_dist[rl] = risk_dist.get(rl, 0) + 1
         else:
             risk_dist["unassessed"] += 1
 
-        att = db.query(AttendanceRecord).filter(AttendanceRecord.student_id == s.id).all()
-        marks = db.query(AcademicRecord).filter(AcademicRecord.student_id == s.id).all()
-        if att:
-            att_list.append(sum(r.attendance_percentage for r in att) / len(att))
-        if marks:
-            marks_list.append(sum((r.total_marks or 0) / (r.max_marks or 100) * 100 for r in marks) / len(marks))
+    # Per-student attendance averages in one query
+    att_by = {}
+    for sid, pct in db.query(AttendanceRecord.student_id, AttendanceRecord.attendance_percentage).all():
+        att_by.setdefault(sid, []).append(pct or 0.0)
+    att_avgs = [sum(v) / len(v) for v in att_by.values()]
+
+    # Per-student marks averages in one query
+    marks_by = {}
+    for sid, total, mx in db.query(
+        AcademicRecord.student_id, AcademicRecord.total_marks, AcademicRecord.max_marks
+    ).all():
+        pct = (total or 0) / (mx or 100) * 100
+        marks_by.setdefault(sid, []).append(pct)
+    marks_avgs = [sum(v) / len(v) for v in marks_by.values()]
 
     uploads = db.query(DataUpload).order_by(DataUpload.uploaded_at.desc()).limit(5).all()
     model_info = db.query(ModelVersion).filter(ModelVersion.is_active == True).first()
 
     return {
         "total_students": len(students),
-        "total_faculty": len(faculty_list),
+        "total_faculty": faculty_count,
         "total_users": db.query(User).count(),
         "risk_distribution": risk_dist,
-        "overall_avg_attendance": round(sum(att_list) / len(att_list), 1) if att_list else 0,
-        "overall_avg_marks": round(sum(marks_list) / len(marks_list), 1) if marks_list else 0,
+        "overall_avg_attendance": round(sum(att_avgs) / len(att_avgs), 1) if att_avgs else 0,
+        "overall_avg_marks": round(sum(marks_avgs) / len(marks_avgs), 1) if marks_avgs else 0,
         "at_risk_count": risk_dist["medium"] + risk_dist["high"],
         "recent_uploads": [
             {"id": u.id, "filename": u.filename, "type": u.upload_type,
@@ -139,6 +150,12 @@ def get_risk_trends(db: Session = Depends(get_db), current_user: User = Depends(
 @router.get("/analytics/department-comparison")
 def department_comparison(db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
     students = db.query(Student).all()
+    preds = db.query(Prediction).order_by(Prediction.student_id, Prediction.created_at.desc()).all()
+    latest = {}
+    for p in preds:
+        if p.student_id not in latest:
+            latest[p.student_id] = p
+
     dept_data = {}
     for s in students:
         dept = s.department or "Unknown"
@@ -146,7 +163,7 @@ def department_comparison(db: Session = Depends(get_db), current_user: User = De
             dept_data[dept] = {"count": 0, "high_risk": 0, "avg_marks": []}
         dept_data[dept]["count"] += 1
 
-        pred = db.query(Prediction).filter(Prediction.student_id == s.id).order_by(Prediction.created_at.desc()).first()
+        pred = latest.get(s.id)
         if pred and pred.risk_level.value == "high":
             dept_data[dept]["high_risk"] += 1
         if pred and pred.predicted_score:

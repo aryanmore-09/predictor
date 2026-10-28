@@ -9,7 +9,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:///./predictor.db
-      - SECRET_KEY=mit-cse-secret-key-super-secure-change-in-production-2026
+      - SECRET_KEY=dev-only-insecure-secret-key-change-before-production
       - ENVIRONMENT=production
     volumes:
       - ./backend/data:/app/data
