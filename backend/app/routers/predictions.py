@@ -1,0 +1,251 @@
+"""
+Predictions router — ML prediction endpoints.
+"""
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from sqlalchemy.orm import Session
+from typing import List
+import json
+import pandas as pd
+import os
+
+from ..database import get_db
+from ..deps import get_admin, get_faculty_or_admin, get_current_user
+from ..models.user import User, UserRole
+from ..models.academic import Student, Prediction, Alert, ModelVersion, Notification
+from ..schemas.prediction import PredictionResponse, BatchPredictionRequest, TrainRequest, TrainResponse
+from ..config import settings
+from ..ml.predict import predict_student, batch_predict
+from ..ml.train import train_models, load_model_meta
+
+router = APIRouter(prefix="/api/predictions", tags=["predictions"])
+
+
+def _save_prediction(db: Session, student_id: int, pred: dict):
+    # Check if existing prediction
+    existing = db.query(Prediction).filter(Prediction.student_id == student_id).order_by(Prediction.created_at.desc()).first()
+    old_risk = existing.risk_level.value if existing else None
+
+    from ..models.academic import RiskLevel
+    risk_map = {"low": RiskLevel.low, "medium": RiskLevel.medium, "high": RiskLevel.high}
+
+    new_pred = Prediction(
+        student_id=student_id,
+        risk_level=risk_map[pred["risk_level"]],
+        dropout_probability=pred["dropout_probability"],
+        predicted_grade_band=pred.get("predicted_grade_band"),
+        pass_probability=pred.get("pass_probability"),
+        predicted_score=pred.get("predicted_score"),
+        top_factors=json.dumps(pred.get("top_factors", [])),
+        model_version=pred.get("model_version"),
+    )
+    db.add(new_pred)
+
+    # Generate alerts if risk changed or is high
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if pred["risk_level"] in ["medium", "high"]:
+        if old_risk != pred["risk_level"]:
+            alert_msg = f"Your academic risk has changed to {pred['risk_level'].upper()}. "
+            if pred["risk_level"] == "high":
+                alert_msg += "Please speak with your faculty or counselor as soon as possible."
+            else:
+                alert_msg += "Please review your study plan and reach out if you need help."
+
+            alert = Alert(
+                student_id=student_id,
+                alert_type="risk_change",
+                message=alert_msg,
+                severity=pred["risk_level"],
+            )
+            db.add(alert)
+
+            # Notification
+            if student and student.user_id:
+                notif = Notification(
+                    user_id=student.user_id,
+                    student_id=student_id,
+                    title="Risk Level Update",
+                    body=alert_msg[:200],
+                    notification_type="alert",
+                )
+                db.add(notif)
+
+    db.commit()
+    return new_pred
+
+
+@router.post("/predict/{student_id}")
+def predict_for_student(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_faculty_or_admin)
+):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    try:
+        pred = predict_student(db, student_id, settings.MODEL_DIR)
+    except RuntimeError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    _save_prediction(db, student_id, pred)
+
+    return {
+        "student_id": student_id,
+        "student_name": student.full_name,
+        **pred
+    }
+
+
+@router.post("/predict/batch")
+def batch_predict_students(
+    request: BatchPredictionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_faculty_or_admin)
+):
+    results = []
+    for sid in request.student_ids:
+        student = db.query(Student).filter(Student.id == sid).first()
+        try:
+            pred = predict_student(db, sid, settings.MODEL_DIR)
+            _save_prediction(db, sid, pred)
+            results.append({
+                "student_id": sid,
+                "student_name": student.full_name if student else "Unknown",
+                **pred
+            })
+        except Exception as e:
+            results.append({"student_id": sid, "error": str(e)})
+    return {"results": results, "total": len(results)}
+
+
+@router.post("/predict-all")
+def predict_all_students(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_faculty_or_admin)
+):
+    """Run predictions for all students."""
+    students = db.query(Student).all()
+    student_ids = [s.id for s in students]
+    results = []
+    for sid in student_ids:
+        student = db.query(Student).filter(Student.id == sid).first()
+        try:
+            pred = predict_student(db, sid, settings.MODEL_DIR)
+            _save_prediction(db, sid, pred)
+            results.append({"student_id": sid, "risk_level": pred["risk_level"], "success": True})
+        except Exception as e:
+            results.append({"student_id": sid, "error": str(e), "success": False})
+    return {"results": results, "total": len(results), "successful": sum(1 for r in results if r.get("success"))}
+
+
+@router.get("/me")
+def get_my_prediction(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Student: get own latest prediction."""
+    if current_user.role != UserRole.student:
+        raise HTTPException(status_code=403, detail="Students only")
+    from ..models.academic import Student as StudentModel
+    student = db.query(StudentModel).filter(StudentModel.user_id == current_user.id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student profile not found")
+
+    pred = db.query(Prediction).filter(Prediction.student_id == student.id).order_by(Prediction.created_at.desc()).first()
+    if not pred:
+        return {"message": "No prediction available yet. Check back later."}
+
+    return {
+        "risk_level": pred.risk_level.value,
+        "dropout_probability": pred.dropout_probability,
+        "predicted_grade_band": pred.predicted_grade_band,
+        "pass_probability": pred.pass_probability,
+        "predicted_score": pred.predicted_score,
+        "top_factors": json.loads(pred.top_factors) if pred.top_factors else [],
+        "model_version": pred.model_version,
+        "created_at": pred.created_at.isoformat(),
+    }
+
+
+@router.post("/train")
+def trigger_training(
+    request: TrainRequest = TrainRequest(),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin)
+):
+    """Admin: trigger model retraining from DB data."""
+    from ..ml.preprocessing import build_features_from_db, FEATURE_COLUMNS
+    import numpy as np
+
+    students = db.query(Student).all()
+    if len(students) < 10:
+        raise HTTPException(status_code=400, detail="Need at least 10 students with data to train")
+
+    rows = []
+    for s in students:
+        feats = build_features_from_db(db, s.id)
+        if feats:
+            feats["gender"] = s.gender or "Male"
+            feats["age"] = s.age or 20
+            pred = db.query(Prediction).filter(Prediction.student_id == s.id).order_by(Prediction.created_at.desc()).first()
+            # Use existing label or derive from features
+            if pred and hasattr(pred, 'dropout_probability'):
+                is_dropout = 1 if pred.dropout_probability >= 0.5 else 0
+            else:
+                # Derive label from features
+                score = feats.get("avg_marks", 60)
+                att = feats.get("attendance_percentage", 75)
+                is_dropout = 1 if (score < 45 or att < 60) else 0
+            feats["is_dropout"] = is_dropout
+            rows.append(feats)
+
+    if len(rows) < 10:
+        raise HTTPException(status_code=400, detail="Not enough feature data to train")
+
+    df = pd.DataFrame(rows)
+    meta = train_models(df, settings.MODEL_DIR)
+
+    # Save version to DB
+    mv = ModelVersion(
+        version=meta["version"],
+        algorithm=meta["best_algorithm"],
+        accuracy=meta["metrics"]["accuracy"],
+        precision=meta["metrics"]["precision"],
+        recall=meta["metrics"]["recall"],
+        f1_score=meta["metrics"]["f1_score"],
+        roc_auc=meta["metrics"]["roc_auc"],
+        training_samples=meta["training_samples"],
+        is_active=True,
+        metrics_json=json.dumps(meta),
+    )
+    db.query(ModelVersion).update({"is_active": False})
+    db.add(mv)
+    db.commit()
+
+    return {
+        "status": "success",
+        "model_version": meta["version"],
+        "best_algorithm": meta["best_algorithm"],
+        "metrics": meta["metrics"],
+        "training_samples": meta["training_samples"],
+        "all_metrics": meta.get("all_metrics", {}),
+        "feature_importance": meta.get("feature_importance", []),
+        "fairness": meta.get("fairness", {}),
+    }
+
+
+@router.get("/model-info")
+def get_model_info(db: Session = Depends(get_db), current_user: User = Depends(get_faculty_or_admin)):
+    meta = load_model_meta(settings.MODEL_DIR)
+    model_versions = db.query(ModelVersion).order_by(ModelVersion.trained_at.desc()).limit(10).all()
+    return {
+        "current_model": meta,
+        "history": [
+            {
+                "id": mv.id, "version": mv.version, "algorithm": mv.algorithm,
+                "accuracy": mv.accuracy, "roc_auc": mv.roc_auc,
+                "is_active": mv.is_active, "trained_at": mv.trained_at.isoformat()
+            }
+            for mv in model_versions
+        ]
+    }
