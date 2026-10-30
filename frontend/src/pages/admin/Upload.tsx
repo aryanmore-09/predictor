@@ -89,7 +89,7 @@ export default function AdminUpload() {
               <a
                 href={`/api/upload/template/${uploadType}`}
                 download
-                className="w-full py-2 px-3.5 bg-white border border-line hover:border-brand-300 rounded-xl text-brand-600 hover:text-brand-700 flex items-center justify-center gap-2 text-xs font-semibold transition shadow-xs"
+                className="w-full py-2 px-3.5 bg-surface border border-line hover:border-brand-300 rounded-xl text-brand-600 hover:text-brand-700 flex items-center justify-center gap-2 text-xs font-semibold transition shadow-xs"
               >
                 <Download className="w-3.5 h-3.5" /> Download {uploadType}.csv Template
               </a>

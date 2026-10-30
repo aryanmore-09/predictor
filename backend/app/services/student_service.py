@@ -51,7 +51,7 @@ class StudentService:
         recommendations = []
         if pred_data:
             factors = pred_data.get("top_factors", [])
-            feat_dict = {f["feature"]: f["value"] for f in factors}
+            feat_dict = {f["feature"]: f.get("value", 0) for f in factors if isinstance(f, dict) and "feature" in f}
             recommendations = get_recommendations(feat_dict, pred_data["risk_level"])
 
         return {

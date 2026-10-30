@@ -7,7 +7,9 @@ import {
 } from 'lucide-react'
 import { facultyApi, predictionApi, reportApi, testPaperApi, attendanceApi } from '../../api'
 import type { TestPaper, AttendanceSummary, SubjectAttendance, CalendarDayItem } from '../../api'
-import { Card, StatCard, Button, RiskBadge, Textarea, Skeleton, Modal } from '../../components/ui'
+import { Card, StatCard, Button, RiskBadge, Textarea, Skeleton, Modal, EmptyState } from '../../components/ui'
+import WhatIfSimulator from '../../components/WhatIfSimulator'
+import RiskTrendChart from '../../components/RiskTrendChart'
 
 export default function FacultyStudentDetail() {
   const { id } = useParams<{ id: string }>()
@@ -105,6 +107,29 @@ export default function FacultyStudentDetail() {
     }
   }
 
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloadingPdf(true)
+      const res = await reportApi.exportStudentPdf(studentId)
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `student_${student?.student_id || studentId}_report.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Student PDF report downloaded')
+    } catch {
+      toast.error('Failed to download PDF report')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
+
   const handleExportCsv = async () => {
     try {
       const res = await reportApi.exportStudentDetailCsv(studentId)
@@ -168,6 +193,11 @@ export default function FacultyStudentDetail() {
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+        <Skeleton className="h-80 w-full" />
       </div>
     )
   }
@@ -190,10 +220,19 @@ export default function FacultyStudentDetail() {
           <Button
             variant="secondary"
             size="sm"
+            onClick={handleDownloadPdf}
+            loading={downloadingPdf}
+            icon={<FileText className="w-3.5 h-3.5" />}
+          >
+            Download PDF
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={handleExportCsv}
             icon={<Download className="w-3.5 h-3.5" />}
           >
-            Export Report
+            Export CSV
           </Button>
           <Button
             variant="primary"
@@ -258,6 +297,12 @@ export default function FacultyStudentDetail() {
         />
       </div>
 
+      {/* Risk Trend Over Time */}
+      <RiskTrendChart studentId={studentId} />
+
+      {/* What-If Simulator */}
+      <WhatIfSimulator studentId={studentId} studentName={student?.full_name} />
+
       {/* Action Forms: Send Intervention & Counselor Referral */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Intervention Box */}
@@ -289,7 +334,7 @@ export default function FacultyStudentDetail() {
           </form>
 
           {/* Past Interventions */}
-          {data?.interventions?.length > 0 && (
+          {data?.interventions?.length > 0 ? (
             <div className="pt-3 border-t border-line space-y-2">
               <div className="text-xs font-bold text-ink-700 uppercase tracking-wider">Previous Interventions:</div>
               {data.interventions.slice(0, 3).map((it: any) => (
@@ -303,6 +348,15 @@ export default function FacultyStudentDetail() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : (
+            <div className="pt-3 border-t border-line">
+              <EmptyState
+                icon={<MessageSquare className="w-5 h-5 text-brand-500" />}
+                title="No Interventions Sent"
+                description="No previous intervention messages have been logged for this student."
+                className="py-6"
+              />
             </div>
           )}
         </Card>
@@ -562,7 +616,7 @@ export default function FacultyStudentDetail() {
             </div>
 
             {previewPaper.remarks && (
-              <div className="p-2.5 rounded-lg bg-white border border-line">
+              <div className="p-2.5 rounded-lg bg-surface border border-line">
                 <span className="font-bold text-ink-900">Student Remarks: </span>
                 <span className="text-ink-700">{previewPaper.remarks}</span>
               </div>
@@ -575,7 +629,7 @@ export default function FacultyStudentDetail() {
               </div>
             )}
 
-            <div className="border border-line rounded-xl overflow-hidden bg-white min-h-[280px] max-h-[420px] flex items-center justify-center p-2">
+            <div className="border border-line rounded-xl overflow-hidden bg-surface min-h-[280px] max-h-[420px] flex items-center justify-center p-2">
               {previewUrl ? (
                 previewPaper.file_type.startsWith('image/') ? (
                   <img src={previewUrl} alt="Paper" className="max-h-[400px] object-contain rounded" />

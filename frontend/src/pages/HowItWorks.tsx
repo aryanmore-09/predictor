@@ -73,7 +73,7 @@ export default function HowItWorks() {
 
               {!isLast && (
                 <div className="flex justify-center -my-1">
-                  <div className="w-8 h-8 rounded-full bg-white border border-line flex items-center justify-center text-brand-500 shadow-xs">
+                  <div className="w-8 h-8 rounded-full bg-surface border border-line flex items-center justify-center text-brand-500 shadow-xs">
                     <ArrowDown className="w-4 h-4" />
                   </div>
                 </div>

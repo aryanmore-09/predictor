@@ -44,7 +44,7 @@ export default function StudentSurvey() {
         </p>
       </Card>
 
-      <form onSubmit={handleSubmit} className="bg-white border border-line rounded-2xl shadow-sm p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="bg-surface border border-line rounded-2xl shadow-sm p-6 space-y-6">
         {/* Stress Level */}
         <div>
           <div className="flex justify-between items-center mb-2">

@@ -192,6 +192,21 @@ export default function StudentAttendance() {
   const calendarMap = new Map<string, CalendarDayItem>()
   calendarDays.forEach((d) => calendarMap.set(d.date, d))
 
+  if (loading) {
+    return (
+      <div className="space-y-6 py-2">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-44 w-full" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+        <Skeleton className="h-72 w-full" />
+      </div>
+    )
+  }
+
   const overallPct = summary?.overall_percentage ?? 100
   const thresholdPct = summary?.threshold_percentage ?? 75
 
@@ -237,7 +252,7 @@ export default function StudentAttendance() {
       </div>
 
       {/* ── Top KPI Banner with Progress Ring ── */}
-      <Card className="p-5 sm:p-6 bg-white border border-line">
+      <Card className="p-5 sm:p-6 bg-surface border border-line">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
           {/* Circular Ring Column */}
           <div className="flex items-center gap-4 border-b md:border-b-0 md:border-r border-line pb-4 md:pb-0 md:pr-4">
@@ -618,7 +633,7 @@ export default function StudentAttendance() {
 
                 <div className="divide-y divide-line border border-line rounded-xl overflow-hidden">
                   {selectedDay.sessions.map((sess) => (
-                    <div key={sess.id} className="p-3 bg-white flex justify-between items-center text-xs">
+                    <div key={sess.id} className="p-3 bg-surface flex justify-between items-center text-xs">
                       <div>
                         <div className="font-bold text-ink-900">{sess.subject}</div>
                         <div className="text-[11px] text-ink-500">{sess.start_time} - {sess.end_time}</div>
@@ -673,7 +688,7 @@ export default function StudentAttendance() {
                 <select
                   value={simSubject}
                   onChange={(e) => setSimSubject(e.target.value)}
-                  className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   {subjects.map((s) => (
                     <option key={s.subject} value={s.subject}>
@@ -694,7 +709,7 @@ export default function StudentAttendance() {
                     max="30"
                     value={simMissCount}
                     onChange={(e) => setSimMissCount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-danger"
+                    className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-danger"
                   />
                 </div>
 
@@ -708,7 +723,7 @@ export default function StudentAttendance() {
                     max="30"
                     value={simAttendCount}
                     onChange={(e) => setSimAttendCount(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -751,7 +766,7 @@ export default function StudentAttendance() {
                 <div
                   className={`p-3 rounded-xl text-xs font-medium border ${
                     Number(calculateSimulatedPct()) >= thresholdPct
-                      ? 'bg-white border-brand-300 text-brand-800'
+                      ? 'bg-surface border-brand-300 text-brand-800'
                       : 'bg-danger-bg border-red-200 text-danger'
                   }`}
                 >
@@ -786,7 +801,7 @@ export default function StudentAttendance() {
                   setFilterSubject(e.target.value)
                   setRecordPage(1)
                 }}
-                className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs text-ink-900"
+                className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-xs text-ink-900"
               >
                 <option value="">All Subjects</option>
                 {subjects.map((s) => (
@@ -803,7 +818,7 @@ export default function StudentAttendance() {
                   setFilterStatus(e.target.value)
                   setRecordPage(1)
                 }}
-                className="w-full rounded-xl border border-line bg-white px-3 py-1.5 text-xs text-ink-900"
+                className="w-full rounded-xl border border-line bg-surface px-3 py-1.5 text-xs text-ink-900"
               >
                 <option value="">All Statuses</option>
                 <option value="Present">Present</option>
@@ -1016,7 +1031,7 @@ export default function StudentAttendance() {
                 value={leaveStart}
                 onChange={(e) => setLeaveStart(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
             <div>
@@ -1026,7 +1041,7 @@ export default function StudentAttendance() {
                 value={leaveEnd}
                 onChange={(e) => setLeaveEnd(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>

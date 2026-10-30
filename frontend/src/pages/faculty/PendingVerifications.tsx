@@ -346,14 +346,14 @@ export default function FacultyPendingVerifications() {
 
             {/* Student Remarks */}
             {selectedPaper.remarks && (
-              <div className="p-2.5 rounded-xl bg-white border border-line text-xs">
+              <div className="p-2.5 rounded-xl bg-surface border border-line text-xs">
                 <span className="font-bold text-ink-900">Student Remarks: </span>
                 <span className="text-ink-700">{selectedPaper.remarks}</span>
               </div>
             )}
 
             {/* Document Viewer Frame */}
-            <div className="border border-line rounded-xl overflow-hidden bg-white">
+            <div className="border border-line rounded-xl overflow-hidden bg-surface">
               <div className="p-2.5 bg-mist border-b border-line flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 truncate max-w-sm">
                   <FileText className="w-4 h-4 text-accent-500 shrink-0" />
@@ -458,7 +458,7 @@ export default function FacultyPendingVerifications() {
                         value={correctedMarks}
                         onChange={(e) => setCorrectedMarks(e.target.value)}
                         required
-                        className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                       />
                       <span className="text-[10px] text-ink-500 mt-0.5 block">
                         Edit if calculated marks on answer sheet differ.

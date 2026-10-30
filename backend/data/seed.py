@@ -199,6 +199,468 @@ def generate_student_profile(idx: int, semester: int) -> dict:
     }
 
 
+STORY_STUDENTS = [
+    {
+        "email": "student1@mit.edu",
+        "full_name": "Aarav Sharma (Dramatic Recovery)",
+        "short_name": "Aarav Sharma",
+        "student_id": "MIT20240001",
+        "story": "Dramatic Recovery",
+        "gender": "Male",
+        "age": 20,
+        "semester": 4,
+        "year": 2,
+        "current_attendance": 86.0,
+        "past_attendance": 42.0,
+        "current_marks": 72.0,
+        "past_marks": 38.0,
+        "stress": 2,
+        "motivation": 4,
+        "study_hours": 4.8,
+        "lms_login": 7.5,
+        "sub_rate": 88.0,
+        "late_rate": 6.0,
+        "backlogs": 0,
+        "start_prob": 0.96,
+        "end_prob": 0.28,
+        "start_score": 38.0,
+        "end_score": 72.0,
+        "has_alert": False,
+    },
+    {
+        "email": "student2@mit.edu",
+        "full_name": "Diya Patel (Recovered)",
+        "short_name": "Diya Patel",
+        "student_id": "MIT20240002",
+        "story": "Recovered",
+        "gender": "Female",
+        "age": 20,
+        "semester": 4,
+        "year": 2,
+        "current_attendance": 82.0,
+        "past_attendance": 50.0,
+        "current_marks": 68.0,
+        "past_marks": 42.0,
+        "stress": 2,
+        "motivation": 4,
+        "study_hours": 4.5,
+        "lms_login": 7.0,
+        "sub_rate": 90.0,
+        "late_rate": 5.0,
+        "backlogs": 0,
+        "start_prob": 0.81,
+        "end_prob": 0.13,
+        "start_score": 42.0,
+        "end_score": 68.0,
+        "has_alert": False,
+    },
+    {
+        "email": "student3@mit.edu",
+        "full_name": "Rohan Kulkarni (Steady Achiever)",
+        "short_name": "Rohan Kulkarni",
+        "student_id": "MIT20240003",
+        "story": "Steady Achiever",
+        "gender": "Male",
+        "age": 21,
+        "semester": 4,
+        "year": 2,
+        "current_attendance": 92.0,
+        "past_attendance": 90.0,
+        "current_marks": 88.0,
+        "past_marks": 86.0,
+        "stress": 1,
+        "motivation": 5,
+        "study_hours": 5.5,
+        "lms_login": 8.5,
+        "sub_rate": 98.0,
+        "late_rate": 2.0,
+        "backlogs": 0,
+        "start_prob": 0.08,
+        "end_prob": 0.05,
+        "start_score": 86.0,
+        "end_score": 88.0,
+        "has_alert": False,
+    },
+    {
+        "email": "student4@mit.edu",
+        "full_name": "Ananya Iyer (Borderline)",
+        "short_name": "Ananya Iyer",
+        "student_id": "MIT20240004",
+        "story": "Borderline",
+        "gender": "Female",
+        "age": 19,
+        "semester": 4,
+        "year": 2,
+        "current_attendance": 72.0,
+        "past_attendance": 78.0,
+        "current_marks": 58.0,
+        "past_marks": 64.0,
+        "stress": 3,
+        "motivation": 3,
+        "study_hours": 2.8,
+        "lms_login": 3.8,
+        "sub_rate": 74.0,
+        "late_rate": 22.0,
+        "backlogs": 1,
+        "start_prob": 0.38,
+        "end_prob": 0.54,
+        "start_score": 64.0,
+        "end_score": 58.0,
+        "has_alert": True,
+        "alert_message": "BORDERLINE ADVISORY: Attendance is hovering near 72%. Complete pending lab assignments to maintain standing.",
+    },
+    {
+        "email": "student5@mit.edu",
+        "full_name": "Kabir Mehta (Disengaged)",
+        "short_name": "Kabir Mehta",
+        "student_id": "MIT20240005",
+        "story": "Disengaged",
+        "gender": "Male",
+        "age": 20,
+        "semester": 4,
+        "year": 2,
+        "current_attendance": 66.0,
+        "past_attendance": 74.0,
+        "current_marks": 55.0,
+        "past_marks": 60.0,
+        "stress": 3,
+        "motivation": 2,
+        "study_hours": 1.8,
+        "lms_login": 1.2,
+        "sub_rate": 62.0,
+        "late_rate": 48.0,
+        "backlogs": 1,
+        "start_prob": 0.32,
+        "end_prob": 0.62,
+        "start_score": 60.0,
+        "end_score": 55.0,
+        "has_alert": True,
+        "alert_message": "ENGAGEMENT WARNING: 48% late submission rate and low LMS login activity detected over past 30 days.",
+    },
+    {
+        "email": "student6@mit.edu",
+        "full_name": "Sneha Reddy (Backlog Risk)",
+        "short_name": "Sneha Reddy",
+        "student_id": "MIT20240006",
+        "story": "Backlog Risk",
+        "gender": "Female",
+        "age": 20,
+        "semester": 4,
+        "year": 2,
+        "current_attendance": 68.0,
+        "past_attendance": 75.0,
+        "current_marks": 52.0,
+        "past_marks": 58.0,
+        "stress": 4,
+        "motivation": 2,
+        "study_hours": 2.2,
+        "lms_login": 3.0,
+        "sub_rate": 68.0,
+        "late_rate": 35.0,
+        "backlogs": 3,
+        "start_prob": 0.28,
+        "end_prob": 0.68,
+        "start_score": 58.0,
+        "end_score": 52.0,
+        "has_alert": True,
+        "alert_message": "BACKLOG ALERT: Cumulative active backlogs (3) threaten prerequisite course progression.",
+    },
+]
+
+
+def seed_demo_users_and_faculty(db: Session):
+    """
+    Idempotently seeds demo users (admin, faculty, demo story students) and faculty profiles.
+    Never duplicates existing rows. Updates demo student names and links student records.
+    """
+    print("Creating demo users...")
+    demo_users = [
+        {"email": "admin@mit.edu", "full_name": "Admin User", "role": UserRole.admin, "password": "Admin@123"},
+        {"email": "prof.sharma@mit.edu", "full_name": "Prof. Ramesh Sharma", "role": UserRole.faculty, "password": "Faculty@123"},
+        {"email": "prof.desai@mit.edu", "full_name": "Prof. Priya Desai", "role": UserRole.faculty, "password": "Faculty@123"},
+    ]
+    student_demo_emails = [s["email"] for s in STORY_STUDENTS]
+    for story in STORY_STUDENTS:
+        demo_users.append({
+            "email": story["email"],
+            "full_name": story["full_name"],
+            "role": UserRole.student,
+            "password": "Student@123"
+        })
+
+    created_users = {}
+    for ud in demo_users:
+        existing = db.query(User).filter(User.email == ud["email"]).first()
+        if not existing:
+            u = User(
+                email=ud["email"],
+                full_name=ud["full_name"],
+                hashed_password=get_password_hash(ud["password"]),
+                role=ud["role"],
+            )
+            db.add(u)
+            db.flush()
+            created_users[ud["email"]] = u
+        else:
+            if existing.full_name != ud["full_name"] and ("Demo Student" in existing.full_name or "student" in existing.email):
+                existing.full_name = ud["full_name"]
+                db.flush()
+            created_users[ud["email"]] = existing
+
+    db.commit()
+
+    # ---- Faculty Profiles ----
+    print("Creating faculty profiles...")
+    fac_users = [
+        (created_users.get("prof.sharma@mit.edu"), "FAC001", "Prof. Ramesh Sharma", "Associate Professor"),
+        (created_users.get("prof.desai@mit.edu"), "FAC002", "Prof. Priya Desai", "Assistant Professor"),
+    ]
+    created_faculty = {}
+    for fac_user, fac_id, name, desig in fac_users:
+        if fac_user:
+            from app.models.academic import Faculty as FacultyModel
+            existing = db.query(FacultyModel).filter(FacultyModel.faculty_id == fac_id).first()
+            if not existing:
+                fac = FacultyModel(
+                    user_id=fac_user.id,
+                    faculty_id=fac_id,
+                    full_name=name,
+                    email=fac_user.email,
+                    designation=desig,
+                )
+                db.add(fac)
+                db.flush()
+                created_faculty[fac_id] = fac
+            else:
+                created_faculty[fac_id] = existing
+    db.commit()
+
+    # Link demo student users to Student records if student records already exist
+    for i, email in enumerate(student_demo_emails):
+        u = created_users.get(email)
+        if u:
+            st = db.query(Student).filter(Student.email == email).first()
+            if not st:
+                st = db.query(Student).filter(Student.student_id == f"MIT2024{(i+1):04d}").first()
+            if st and st.user_id != u.id:
+                st.user_id = u.id
+    db.commit()
+
+    return created_users, created_faculty, student_demo_emails
+
+
+def seed_or_update_story_students(db: Session, created_users: dict, now: datetime) -> set:
+    """
+    Seeds or updates the 6 story students with realistic feature trajectories and
+    monotonic weekly prediction series (6-8 checkpoints).
+    Returns a set of student IDs to prevent generic random prediction drift.
+    """
+    from app.ml.predict import get_risk_level, get_grade_band, get_pass_probability
+    from app.models.academic import RiskLevel, Prediction as PredModel, Alert as AlertModel
+    import json as json_mod
+
+    risk_map = {"low": RiskLevel.low, "medium": RiskLevel.medium, "high": RiskLevel.high}
+    story_student_ids = set()
+
+    for idx, story in enumerate(STORY_STUDENTS):
+        user_email = story["email"]
+        u = created_users.get(user_email)
+        user_id = u.id if u else None
+        sid = story["student_id"]
+
+        student = db.query(Student).filter((Student.student_id == sid) | (Student.email == user_email)).first()
+        if not student:
+            student = Student(
+                user_id=user_id,
+                student_id=sid,
+                full_name=story["full_name"],
+                email=user_email,
+                gender=story["gender"],
+                age=story["age"],
+                semester=story["semester"],
+                year=story["year"],
+            )
+            db.add(student)
+            db.flush()
+        else:
+            student.full_name = story["full_name"]
+            student.email = user_email
+            student.gender = story["gender"]
+            student.age = story["age"]
+            student.semester = story["semester"]
+            student.year = story["year"]
+            if user_id:
+                student.user_id = user_id
+            db.flush()
+
+        story_student_ids.add(student.id)
+
+        # Clear old records for this story student
+        db.query(AcademicRecord).filter(AcademicRecord.student_id == student.id).delete()
+        db.query(AttendanceRecord).filter(AttendanceRecord.student_id == student.id).delete()
+        db.query(AssignmentRecord).filter(AssignmentRecord.student_id == student.id).delete()
+        db.query(QuizRecord).filter(QuizRecord.student_id == student.id).delete()
+        db.query(SurveyResponse).filter(SurveyResponse.student_id == student.id).delete()
+        db.query(LMSData).filter(LMSData.student_id == student.id).delete()
+        db.query(AttendanceEntry).filter(AttendanceEntry.student_id == student.id).delete()
+        db.flush()
+
+        # Deterministic RNG per story student
+        rng = np.random.RandomState(100 + idx * 37)
+
+        # 5 Core Subject records
+        for s_idx, subj in enumerate(SUBJECTS[:5]):
+            sub_m = float(np.clip(story["current_marks"] + rng.uniform(-3, 3), 15, 100))
+            sub_att = float(np.clip(story["current_attendance"] + rng.uniform(-4, 4), 15, 100))
+            grade = "A" if sub_m >= 75 else "B" if sub_m >= 60 else "C" if sub_m >= 50 else "D" if sub_m >= 40 else "F"
+            db.add(AcademicRecord(
+                student_id=student.id,
+                subject=subj,
+                semester=story["semester"],
+                year=story["year"],
+                internal_marks=round(sub_m * 0.4, 1),
+                external_marks=round(sub_m * 0.6, 1),
+                total_marks=round(sub_m, 1),
+                max_marks=100.0,
+                grade=grade,
+            ))
+            db.add(AttendanceRecord(
+                student_id=student.id,
+                subject=subj,
+                semester=story["semester"],
+                year=story["year"],
+                total_classes=60,
+                attended_classes=int(round(60 * sub_att / 100)),
+                attendance_percentage=round(sub_att, 1),
+            ))
+            db.add(AssignmentRecord(
+                student_id=student.id,
+                subject=subj,
+                semester=story["semester"],
+                total_assignments=10,
+                submitted_assignments=int(round(10 * story["sub_rate"] / 100)),
+                late_submissions=int(round(10 * story["late_rate"] / 100)),
+                avg_score=round(sub_m * 0.95, 1),
+            ))
+            db.add(QuizRecord(
+                student_id=student.id,
+                subject=subj,
+                semester=story["semester"],
+                total_quizzes=6,
+                attempted_quizzes=6 if story["motivation"] >= 3 else 4,
+                avg_score=round(sub_m, 1),
+            ))
+
+        # Survey Response
+        db.add(SurveyResponse(
+            student_id=student.id,
+            stress_level=story["stress"],
+            workload_level=5 if story["stress"] >= 4 else 3,
+            study_hours_per_day=story["study_hours"],
+            motivation_level=story["motivation"],
+            support_needed=story["has_alert"],
+            support_type="Academic Counseling & Tutoring" if story["has_alert"] else None,
+            free_text=f"Demonstration Archetype Profile: {story['story']}",
+            consent_given=True,
+            consent_timestamp=now - timedelta(days=25),
+            submitted_at=now - timedelta(days=15),
+        ))
+
+        # LMS Telemetry
+        db.add(LMSData(
+            student_id=student.id,
+            semester=story["semester"],
+            login_frequency_per_week=story["lms_login"],
+            avg_time_spent_hours=round(story["study_hours"] * 1.4, 1),
+            resource_views=int(story["lms_login"] * 12),
+            forum_posts=12 if story["story"] == "Steady Achiever" else 1 if story["story"] == "Disengaged" else 5,
+            early_submissions=max(0, 10 - int(round(10 * story["late_rate"] / 100))),
+            late_submissions=int(round(10 * story["late_rate"] / 100)),
+            recorded_at=now - timedelta(days=2),
+        ))
+
+        # Dated Attendance entries (past 60 days)
+        for day_offset in range(2, 62, 3):
+            session_dt = now - timedelta(days=day_offset)
+            is_recent = day_offset <= 30
+            att_target = story["current_attendance"] if is_recent else story["past_attendance"]
+            prob_present = att_target / 100.0
+            for subj in SUBJECTS[:4]:
+                st_val = "present" if (rng.random() < prob_present) else "absent"
+                db.add(AttendanceEntry(
+                    student_id=student.id,
+                    subject=subj,
+                    session_date=session_dt,
+                    status=st_val
+                ))
+
+        # Prediction series: monotonic 7 weekly checkpoints
+        db.query(PredModel).filter(PredModel.student_id == student.id).delete()
+        db.flush()
+
+        num_weeks = 7
+        # Damped wobble so the trend has visible ups and downs, not a straight ramp.
+        wobble_pattern = [0.06, -0.05, 0.05, -0.06, 0.04, -0.04, 0.0]
+        for w in range(num_weeks - 1, -1, -1):
+            step = num_weeks - 1 - w
+            t = step / float(num_weeks - 1)
+            base_p = story["start_prob"] + t * (story["end_prob"] - story["start_prob"])
+            base_s = story["start_score"] + t * (story["end_score"] - story["start_score"])
+            bump = wobble_pattern[step % len(wobble_pattern)] * (1.0 - t)
+            p_val = float(np.clip(base_p + bump, 0.02, 0.98))
+            s_val = float(np.clip(base_s + bump * 40.0, 20.0, 98.0))
+            created_dt = now - timedelta(days=w * 7, hours=4)
+
+            r_level = get_risk_level(p_val)
+            g_band = get_grade_band(s_val)
+            p_pass = get_pass_probability(s_val)
+
+            factors = []
+            if p_val >= 0.65:
+                factors = [
+                    {"factor": "Low Attendance", "impact": "High Negative", "description": f"Class presence at {story['current_attendance']}%"},
+                    {"factor": "Assessment Scores", "impact": "High Negative", "description": f"Average marks at {story['current_marks']}%"},
+                    {"factor": "Perceived Stress", "impact": "Moderate Negative", "description": f"Self-reported stress score {story['stress']}/5"},
+                ]
+            elif p_val >= 0.35:
+                factors = [
+                    {"factor": "Fluctuating Attendance", "impact": "Moderate Negative", "description": f"Attendance at {story['current_attendance']}%"},
+                    {"factor": "Course Engagement", "impact": "Moderate Negative", "description": f"LMS activity {story['lms_login']:.1f} sessions/wk"},
+                ]
+            else:
+                factors = [
+                    {"factor": "Consistent Attendance", "impact": "High Positive", "description": f"Attendance standing at {story['current_attendance']}%"},
+                    {"factor": "Strong Exam Marks", "impact": "High Positive", "description": f"Average score at {story['current_marks']}%"},
+                ]
+
+            pred_rec = PredModel(
+                student_id=student.id,
+                risk_level=risk_map[r_level],
+                dropout_probability=round(p_val, 4),
+                predicted_grade_band=g_band,
+                pass_probability=round(p_pass, 4),
+                predicted_score=round(s_val, 2),
+                top_factors=json_mod.dumps(factors),
+                model_version="v20261030_story",
+                created_at=created_dt,
+            )
+            db.add(pred_rec)
+
+        # Alerts (only for students ending in medium or high risk; recovered student has no active warning alert)
+        db.query(AlertModel).filter(AlertModel.student_id == student.id).delete()
+        if story["has_alert"]:
+            db.add(AlertModel(
+                student_id=student.id,
+                alert_type="risk_change",
+                message=story["alert_message"],
+                severity=get_risk_level(story["end_prob"]),
+                created_at=now,
+            ))
+
+    db.commit()
+    return story_student_ids
+
+
 def seed_database():
     print("🚀 Starting database seed...")
     Base.metadata.create_all(bind=engine)
@@ -212,68 +674,8 @@ def seed_database():
     db = SessionLocal()
 
     try:
-        # ---- Demo Accounts ----
-        print("Creating demo users...")
-        demo_users = [
-            {"email": "admin@mit.edu", "full_name": "Admin User", "role": UserRole.admin, "password": "Admin@123"},
-            {"email": "prof.sharma@mit.edu", "full_name": "Prof. Ramesh Sharma", "role": UserRole.faculty, "password": "Faculty@123"},
-            {"email": "prof.desai@mit.edu", "full_name": "Prof. Priya Desai", "role": UserRole.faculty, "password": "Faculty@123"},
-        ]
-        student_demo_emails = [
-            "student1@mit.edu", "student2@mit.edu", "student3@mit.edu",
-            "student4@mit.edu", "student5@mit.edu"
-        ]
-        for i, email in enumerate(student_demo_emails):
-            demo_users.append({
-                "email": email,
-                "full_name": f"Demo Student {i+1}",
-                "role": UserRole.student,
-                "password": "Student@123"
-            })
-
-        created_users = {}
-        for ud in demo_users:
-            existing = db.query(User).filter(User.email == ud["email"]).first()
-            if not existing:
-                u = User(
-                    email=ud["email"],
-                    full_name=ud["full_name"],
-                    hashed_password=get_password_hash(ud["password"]),
-                    role=ud["role"],
-                )
-                db.add(u)
-                db.flush()
-                created_users[ud["email"]] = u
-            else:
-                created_users[ud["email"]] = existing
-
-        db.commit()
-
-        # ---- Faculty Profiles ----
-        print("Creating faculty profiles...")
-        fac_users = [
-            (created_users.get("prof.sharma@mit.edu"), "FAC001", "Prof. Ramesh Sharma", "Associate Professor"),
-            (created_users.get("prof.desai@mit.edu"), "FAC002", "Prof. Priya Desai", "Assistant Professor"),
-        ]
-        created_faculty = {}
-        for fac_user, fac_id, name, desig in fac_users:
-            if fac_user:
-                from app.models.academic import Faculty as FacultyModel
-                existing = db.query(FacultyModel).filter(FacultyModel.faculty_id == fac_id).first()
-                if not existing:
-                    fac = FacultyModel(
-                        user_id=fac_user.id,
-                        faculty_id=fac_id,
-                        full_name=name,
-                        email=fac_user.email,
-                        designation=desig,
-                    )
-                    db.add(fac)
-                    db.flush()
-                    created_faculty[fac_id] = fac
-                else:
-                    created_faculty[fac_id] = existing
-        db.commit()
+        # ---- Demo Accounts & Faculty Profiles ----
+        created_users, created_faculty, student_demo_emails = seed_demo_users_and_faculty(db)
 
         # ---- Generate 520 Students ----
         print("Generating 520 synthetic students...")
@@ -313,6 +715,11 @@ def seed_database():
                 surv.consent_given = True
                 surv.consent_timestamp = datetime.utcnow() - timedelta(days=random.randint(5, 30))
             db.commit()
+
+            # Ensure story students are always updated with their story trajectories
+            now_dt = datetime.utcnow()
+            story_ids = seed_or_update_story_students(db, created_users, now_dt)
+            print(f"  Crafted/updated {len(story_ids)} demonstration story profiles.")
         else:
             semesters = [1, 2, 3, 4, 5, 6]
             student_data_for_training = []
@@ -532,51 +939,86 @@ def seed_database():
 
             # ---- Run predictions for all students ----
             print("\n🔮 Generating predictions for all students...")
-            from app.ml.predict import predict_student
-            from app.models.academic import RiskLevel
+            from app.ml.predict import predict_student, get_risk_level, get_grade_band, get_pass_probability
+            from app.models.academic import RiskLevel, Prediction as PredModel, Alert as AlertModel
 
             risk_map = {"low": RiskLevel.low, "medium": RiskLevel.medium, "high": RiskLevel.high}
             import json as json_mod
 
+            now = datetime.utcnow()
+            story_ids = seed_or_update_story_students(db, created_users, now)
+            print(f"  Crafted {len(story_ids)} story profiles with monotonic trajectories.")
             for s in all_students:
+                if s.id in story_ids:
+                    continue
                 try:
+                    existing_preds = db.query(PredModel).filter(PredModel.student_id == s.id).all()
+                    if len(existing_preds) >= 6:
+                        continue
+
                     pred = predict_student(db, s.id, settings.MODEL_DIR)
-                    from app.models.academic import Prediction as PredModel, Alert as AlertModel
-                    existing_pred = db.query(PredModel).filter(PredModel.student_id == s.id).first()
-                    if not existing_pred:
+                    base_prob = float(pred["dropout_probability"])
+                    base_score = float(pred.get("predicted_score") or 65.0)
+
+                    # Replace single old predictions with the 6-8 weekly series
+                    if existing_preds:
+                        for ep in existing_preds:
+                            db.delete(ep)
+                        db.flush()
+
+                    num_weeks = random.randint(6, 8)
+                    for w in range(num_weeks - 1, -1, -1):
+                        created_dt = now - timedelta(days=w * 7 + random.randint(0, 1), hours=random.randint(1, 12))
+                        if w == 0:
+                            p_val = base_prob
+                            s_val = base_score
+                        else:
+                            drift = (random.random() - 0.5) * 0.18
+                            p_val = float(np.clip(base_prob + drift, 0.01, 0.99))
+                            s_val = float(np.clip(base_score + (random.random() - 0.5) * 10.0, 20.0, 98.0))
+
+                        r_level = get_risk_level(p_val)
+                        g_band = get_grade_band(s_val)
+                        p_pass = get_pass_probability(s_val)
+
                         new_pred = PredModel(
                             student_id=s.id,
-                            risk_level=risk_map[pred["risk_level"]],
-                            dropout_probability=pred["dropout_probability"],
-                            predicted_grade_band=pred.get("predicted_grade_band"),
-                            pass_probability=pred.get("pass_probability"),
-                            predicted_score=pred.get("predicted_score"),
+                            risk_level=risk_map[r_level],
+                            dropout_probability=round(p_val, 4),
+                            predicted_grade_band=g_band,
+                            pass_probability=round(p_pass, 4),
+                            predicted_score=round(s_val, 2),
                             top_factors=json_mod.dumps(pred.get("top_factors", [])),
                             model_version=pred.get("model_version"),
+                            created_at=created_dt,
                         )
                         db.add(new_pred)
 
-                        # Generate alerts for at-risk
-                        if pred["risk_level"] in ["medium", "high"]:
-                            alert = AlertModel(
-                                student_id=s.id,
-                                alert_type="risk_change",
-                                message=f"Your academic risk level is {pred['risk_level'].upper()}. Please review your performance and seek help if needed.",
-                                severity=pred["risk_level"],
-                            )
-                            db.add(alert)
+                    # Generate alerts for at-risk
+                    if pred["risk_level"] in ["medium", "high"]:
+                        alert = AlertModel(
+                            student_id=s.id,
+                            alert_type="risk_change",
+                            message=f"Your academic risk level is {pred['risk_level'].upper()}. Please review your performance and seek help if needed.",
+                            severity=pred["risk_level"],
+                            created_at=now,
+                        )
+                        db.add(alert)
                 except Exception as e:
-                    pass
+                    print(f"  ⚠️ Warning: Failed to generate prediction for student {s.id}: {e}")
 
             db.commit()
-            print("  Predictions generated.")
+            print("  Predictions generated with 6-8 weekly historical checkpoints.")
 
         print("\n✅ Seed complete!")
         print("Demo accounts:")
         print("  Admin:   admin@mit.edu / Admin@123")
         print("  Faculty: prof.sharma@mit.edu / Faculty@123")
         print("  Faculty: prof.desai@mit.edu / Faculty@123")
-        print("  Student: student1@mit.edu / Student@123  (through student5)")
+        print("  Student: student1@mit.edu / Student@123  (through student6)")
+        print("\nStory Demonstration Accounts:")
+        for s in STORY_STUDENTS:
+            print(f"  {s['email']}: {s['full_name']} — Trajectory: {s['story']}")
 
     except Exception as e:
         print(f"❌ Seed error: {e}")

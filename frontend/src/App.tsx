@@ -65,7 +65,7 @@ export default function App() {
           path="/unauthorized"
           element={
             <div className="flex items-center justify-center min-h-screen bg-mist p-4">
-              <div className="bg-white border border-line rounded-2xl p-8 max-w-md text-center shadow-sm">
+              <div className="bg-surface border border-line rounded-2xl p-8 max-w-md text-center shadow-sm">
                 <h1 className="text-4xl font-extrabold text-danger mb-2">403</h1>
                 <h2 className="text-lg font-bold text-ink-900 mb-1">Access Restricted</h2>
                 <p className="text-sm text-ink-500 mb-6">

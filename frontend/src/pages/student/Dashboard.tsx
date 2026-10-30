@@ -4,17 +4,42 @@ import toast from 'react-hot-toast'
 import {
   Calendar, BookOpen, TrendingUp, Sparkles, CheckCircle,
   AlertTriangle, ShieldAlert, ArrowRight, Award, Bell,
-  FileCheck, FileText, Clock
+  FileCheck, FileText, Clock, Download
 } from 'lucide-react'
-import { studentApi, testPaperApi, attendanceApi } from '../../api'
+import { studentApi, testPaperApi, attendanceApi, reportApi } from '../../api'
 import type { TestPaper, AttendanceSummary } from '../../api'
-import { Card, StatCard, RiskBadge, ProgressBar, Skeleton } from '../../components/ui'
+import { Card, StatCard, RiskBadge, ProgressBar, Skeleton, Button } from '../../components/ui'
+import WhatIfSimulator from '../../components/WhatIfSimulator'
+import RiskTrendChart from '../../components/RiskTrendChart'
 
 export default function StudentDashboard() {
   const [data, setData] = useState<any>(null)
   const [recentPapers, setRecentPapers] = useState<TestPaper[]>([])
   const [attSummary, setAttSummary] = useState<AttendanceSummary | null>(null)
   const [loading, setLoading] = useState(true)
+  const [downloadingPdf, setDownloadingPdf] = useState(false)
+
+  const handleDownloadPdf = async () => {
+    if (!student?.id) return
+    setDownloadingPdf(true)
+    try {
+      const res = await reportApi.exportStudentPdf(student.id)
+      const blob = new Blob([res.data], { type: 'application/pdf' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `student_${student.student_id || student.id}_report.pdf`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success('Official academic report downloaded')
+    } catch {
+      toast.error('Failed to download PDF report')
+    } finally {
+      setDownloadingPdf(false)
+    }
+  }
 
   const loadData = async () => {
     try {
@@ -76,26 +101,38 @@ export default function StudentDashboard() {
           <p className="text-xs text-ink-500 mt-1">{student?.department}</p>
         </div>
 
-        {/* Risk Level Badge Box */}
-        <div className="p-4 rounded-2xl bg-brand-50 border border-brand-200 flex items-center gap-4 shrink-0 shadow-xs">
-          <div className="p-3 rounded-xl bg-white border border-brand-200 shadow-xs">
-            {risk === 'high' ? (
-              <ShieldAlert className="w-8 h-8 text-danger" />
-            ) : risk === 'medium' ? (
-              <AlertTriangle className="w-8 h-8 text-warning" />
-            ) : (
-              <CheckCircle className="w-8 h-8 text-brand-600" />
-            )}
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-ink-500">Academic Standing</div>
-            <div className="mt-0.5">
-              <RiskBadge risk={risk} size="md" />
+        {/* Action Controls & Risk Level Badge Box */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+          <div className="p-4 rounded-2xl bg-brand-50 border border-brand-200 flex items-center gap-4 shrink-0 shadow-xs">
+            <div className="p-3 rounded-xl bg-surface border border-brand-200 shadow-xs">
+              {risk === 'high' ? (
+                <ShieldAlert className="w-8 h-8 text-danger" />
+              ) : risk === 'medium' ? (
+                <AlertTriangle className="w-8 h-8 text-warning" />
+              ) : (
+                <CheckCircle className="w-8 h-8 text-brand-600" />
+              )}
             </div>
-            <div className="text-xs text-ink-500 mt-1 tabular-nums">
-              Dropout Prob: {pred ? (pred.dropout_probability * 100).toFixed(1) : 0}%
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-ink-500">Academic Standing</div>
+              <div className="mt-0.5">
+                <RiskBadge risk={risk} size="md" />
+              </div>
+              <div className="text-xs text-ink-500 mt-1 tabular-nums">
+                Dropout Prob: {pred ? (pred.dropout_probability * 100).toFixed(1) : 0}%
+              </div>
             </div>
           </div>
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={handleDownloadPdf}
+            loading={downloadingPdf}
+            icon={<Download className="w-4 h-4" />}
+            className="py-4 border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+          >
+            Download PDF
+          </Button>
         </div>
       </Card>
 
@@ -133,6 +170,16 @@ export default function StudentDashboard() {
           valueClassName="text-warning"
         />
       </div>
+
+      {/* Risk Trend Over Time */}
+      {student?.id && (
+        <RiskTrendChart studentId={student.id} />
+      )}
+
+      {/* What-If Simulator */}
+      {student?.id && (
+        <WhatIfSimulator studentId={student.id} studentName={student.full_name} />
+      )}
 
       {/* Grid: Attendance & Marks */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -316,28 +363,35 @@ export default function StudentDashboard() {
             </p>
           </div>
           <div className="space-y-2">
-            {pred?.top_factors?.map((f: any, idx: number) => (
-              <div
-                key={idx}
-                className="p-3 rounded-xl bg-mist border border-line flex items-center justify-between text-xs"
-              >
-                <div>
-                  <span className="font-semibold text-ink-900 capitalize">
-                    {f.feature.replace(/_/g, ' ')}
-                  </span>
-                  <span className="text-ink-500 ml-2 font-mono">({f.value})</span>
-                </div>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                    f.direction === 'negative'
-                      ? 'bg-danger-bg text-danger border border-red-200'
-                      : 'bg-brand-100 text-brand-700 border border-brand-200'
-                  }`}
+            {pred?.top_factors?.map((f: any, idx: number) => {
+              const label = String(f.feature ?? f.factor ?? 'factor').replace(/_/g, ' ')
+              const value = f.value ?? f.description ?? ''
+              const isNegative = f.direction === 'negative' || String(f.impact ?? '').toLowerCase().includes('negative')
+              return (
+                <div
+                  key={idx}
+                  className="p-3 rounded-xl bg-mist border border-line flex items-center justify-between text-xs"
                 >
-                  {f.direction === 'negative' ? 'Attention Needed' : 'Good Standing'}
-                </span>
-              </div>
-            ))}
+                  <div>
+                    <span className="font-semibold text-ink-900 capitalize">
+                      {label}
+                    </span>
+                    {value !== '' && (
+                      <span className="text-ink-500 ml-2 font-mono">({value})</span>
+                    )}
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      isNegative
+                        ? 'bg-danger-bg text-danger border border-red-200'
+                        : 'bg-brand-100 text-brand-700 border border-brand-200'
+                    }`}
+                  >
+                    {isNegative ? 'Attention Needed' : 'Good Standing'}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </Card>
 

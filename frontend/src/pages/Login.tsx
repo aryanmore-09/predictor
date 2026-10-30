@@ -4,7 +4,7 @@ import toast from 'react-hot-toast'
 import { GraduationCap, ArrowRight, Sparkles } from 'lucide-react'
 import { authApi } from '../api'
 import { useAuthStore } from '../store/auth'
-import { Button, Input } from '../components/ui'
+import { Button, Input, Spotlight, BackgroundBeams } from '../components/ui'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -15,6 +15,7 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    toast.dismiss()
     setLoading(true)
     try {
       const res = await authApi.login(email, password)
@@ -30,12 +31,19 @@ export default function Login() {
         },
         data.access_token
       )
+      toast.dismiss()
       toast.success(`Welcome back, ${data.full_name}!`)
       if (data.role === 'admin') navigate('/admin')
       else if (data.role === 'faculty') navigate('/faculty')
       else navigate('/student')
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Invalid login credentials')
+      toast.dismiss()
+      if (!err.response) {
+        toast.error('Cannot reach the server. Is the backend running on port 8000?')
+      } else {
+        const detail = err.response?.data?.detail
+        toast.error(typeof detail === 'string' ? detail : 'Invalid login credentials')
+      }
     } finally {
       setLoading(false)
     }
@@ -47,9 +55,16 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-mist text-ink-900 font-sans p-4 sm:p-8">
+    <div className="relative min-h-screen flex flex-col justify-between bg-mist text-ink-900 font-sans p-4 sm:p-8 overflow-hidden">
+      {/* Aceternity-style Spotlight and Background Beams (Hero only) */}
+      <Spotlight
+        className="-top-40 left-0 md:left-60 md:-top-20 text-brand-500/20 dark:text-brand-400/25"
+        fill="currentColor"
+      />
+      <BackgroundBeams />
+
       {/* Top Header */}
-      <header className="flex items-center justify-between max-w-6xl mx-auto w-full py-4 border-b border-line">
+      <header className="relative z-10 flex items-center justify-between max-w-6xl mx-auto w-full py-4 border-b border-line">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center shadow-xs">
             <GraduationCap className="w-5 h-5" />
@@ -74,7 +89,7 @@ export default function Login() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto w-full my-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center py-8">
+      <main className="relative z-10 max-w-6xl mx-auto w-full my-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center py-8">
         {/* Left Branding */}
         <div className="lg:col-span-7 space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold bg-brand-100 text-brand-700 border border-brand-200 shadow-xs">
@@ -91,7 +106,7 @@ export default function Login() {
           </p>
 
           {/* Demo Credentials */}
-          <div className="bg-white border border-line rounded-2xl p-5 shadow-sm space-y-3">
+          <div className="bg-surface border border-line rounded-2xl p-5 shadow-sm space-y-3">
             <p className="text-xs font-bold uppercase tracking-wider text-ink-500">
               Quick Demo Access (Click to Fill)
             </p>
@@ -122,7 +137,7 @@ export default function Login() {
 
         {/* Right Sign-in Card */}
         <div className="lg:col-span-5">
-          <div className="bg-white border border-line rounded-2xl p-8 shadow-md relative overflow-hidden">
+          <div className="bg-surface border border-line rounded-2xl p-5 sm:p-8 shadow-md relative overflow-hidden">
             {/* Top brand accent bar */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-brand-600" />
 
@@ -160,6 +175,7 @@ export default function Login() {
                 id="login-submit"
                 type="submit"
                 loading={loading}
+                disabled={loading}
                 className="w-full py-2.5 mt-2"
                 size="md"
               >
@@ -171,7 +187,7 @@ export default function Login() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto w-full text-center py-4 text-xs text-ink-500 border-t border-line">
+      <footer className="relative z-10 max-w-6xl mx-auto w-full text-center py-4 text-xs text-ink-500 border-t border-line">
         © 2026 MIT School of Computing — Department of Computer Science &amp; Engineering. All rights reserved.
       </footer>
     </div>

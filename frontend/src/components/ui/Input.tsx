@@ -27,7 +27,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           <input
             id={inputId}
             ref={ref}
-            className={`w-full bg-white border rounded-xl py-2 px-3.5 text-sm text-ink-900 placeholder:text-ink-300 transition outline-none ${
+            className={`w-full bg-surface border rounded-xl py-2 px-3.5 text-sm min-h-[40px] text-ink-900 placeholder:text-ink-300 transition outline-none ${
               icon ? 'pl-10' : ''
             } ${
               error

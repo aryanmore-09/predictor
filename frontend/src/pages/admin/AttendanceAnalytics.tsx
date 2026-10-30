@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   CalendarCheck, BarChart2, TrendingUp, Users, AlertTriangle,
-  Award, ShieldAlert, Sliders, Send
+  Award, ShieldAlert, Sliders, Send, CheckCircle
 } from 'lucide-react'
 import {
   ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis,
@@ -10,7 +10,7 @@ import {
 } from 'recharts'
 import { attendanceApi } from '../../api'
 import type { AttendanceAnalytics, DefaulterStudent } from '../../api'
-import { Card, StatCard, Button, Skeleton } from '../../components/ui'
+import { Card, StatCard, Button, Skeleton, EmptyState } from '../../components/ui'
 import {
   CHART_PALETTE, CHART_GRID_COLOR, CHART_AXIS_COLOR, chartTooltipStyle
 } from '../../utils/chartColors'
@@ -76,12 +76,17 @@ export default function AdminAttendanceAnalytics() {
     return (
       <div className="space-y-6 py-2">
         <Skeleton className="h-28 w-full" />
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
         </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-72 w-full" />
+          <Skeleton className="h-72 w-full" />
+        </div>
+        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
@@ -155,7 +160,7 @@ export default function AdminAttendanceAnalytics() {
                 max="95"
                 value={thresholdInput}
                 onChange={(e) => setThresholdInput(e.target.value)}
-                className="w-full text-xs font-bold rounded-xl border border-line bg-white pl-3 pr-7 py-2 text-ink-900"
+                className="w-full text-xs font-bold rounded-xl border border-line bg-surface pl-3 pr-7 py-2 text-ink-900"
               />
               <span className="absolute right-3 top-2 text-xs font-bold text-ink-500">%</span>
             </div>
@@ -235,7 +240,16 @@ export default function AdminAttendanceAnalytics() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        {defaulters.length === 0 ? (
+          <div className="p-8">
+            <EmptyState
+              icon={<CheckCircle className="w-6 h-6 text-brand-600" />}
+              title="Zero Defaulters"
+              description={`All active students are meeting or exceeding the institutional attendance threshold of ${activeThreshold}%.`}
+            />
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-line bg-mist/60 text-ink-700 font-semibold uppercase tracking-wider text-[11px]">
@@ -302,6 +316,7 @@ export default function AdminAttendanceAnalytics() {
             </tbody>
           </table>
         </div>
+        )}
       </Card>
     </div>
   )

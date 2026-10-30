@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Search, Eye } from 'lucide-react'
+import { Search, Eye, Users } from 'lucide-react'
 import { facultyApi } from '../../api'
-import { Card, Input, Select, Button, RiskBadge, Skeleton } from '../../components/ui'
+import { Card, Input, Select, Button, RiskBadge, Skeleton, EmptyState } from '../../components/ui'
 
 export default function FacultyStudents() {
   const [students, setStudents] = useState<any[]>([])
@@ -98,7 +98,28 @@ export default function FacultyStudents() {
             <Skeleton className="h-10 w-full" />
           </div>
         ) : students.length === 0 ? (
-          <div className="text-center py-16 text-ink-500 text-sm">No students match current search or filter criteria.</div>
+          <div className="p-8">
+            <EmptyState
+              icon={<Users className="w-6 h-6 text-brand-500" />}
+              title="No Students Found"
+              description="No students matched your search query or filter selection."
+              action={
+                (search || riskFilter || semFilter) ? (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setSearch('')
+                      setRiskFilter('')
+                      setSemFilter('')
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                ) : undefined
+              }
+            />
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">

@@ -19,7 +19,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-white border border-line rounded-2xl shadow-sm p-5 hover:shadow-md hover:border-brand-300 transition duration-150 flex flex-col justify-between ${className}`}
+      className={`bg-surface border border-line rounded-2xl shadow-sm p-5 hover:shadow-md hover:border-brand-300 transition duration-150 flex flex-col justify-between ${className}`}
     >
       <div className="flex items-center justify-between gap-3 mb-2">
         <span className="text-xs font-semibold uppercase tracking-wider text-ink-500">{label}</span>

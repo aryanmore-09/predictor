@@ -355,7 +355,7 @@ export default function AdminModels() {
                 className={`p-4 rounded-xl border transition relative ${
                   isWinner
                     ? 'bg-brand-50 border-brand-500 shadow-xs'
-                    : 'bg-white border-line'
+                    : 'bg-surface border-line'
                 }`}
               >
                 {isWinner && (

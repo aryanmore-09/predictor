@@ -490,7 +490,7 @@ export default function StudentTestPapers() {
                 setFilterSubject(e.target.value)
                 setPage(1)
               }}
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">All Subjects</option>
               {SUBJECT_OPTIONS.map((s) => (
@@ -507,7 +507,7 @@ export default function StudentTestPapers() {
                 setFilterExamType(e.target.value)
                 setPage(1)
               }}
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">All Exam Types</option>
               {EXAM_TYPE_OPTIONS.map((et) => (
@@ -524,7 +524,7 @@ export default function StudentTestPapers() {
                 setFilterStatus(e.target.value)
                 setPage(1)
               }}
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">All Statuses</option>
               <option value="Pending">Pending Verification</option>
@@ -831,7 +831,7 @@ export default function StudentTestPapers() {
                 value={uploadSubject}
                 onChange={(e) => setUploadSubject(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 {SUBJECT_OPTIONS.map((s) => (
                   <option key={s} value={s}>{s}</option>
@@ -845,7 +845,7 @@ export default function StudentTestPapers() {
                 value={uploadExamType}
                 onChange={(e) => setUploadExamType(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 {EXAM_TYPE_OPTIONS.map((et) => (
                   <option key={et} value={et}>{et}</option>
@@ -862,7 +862,7 @@ export default function StudentTestPapers() {
               value={uploadExamDate}
               onChange={(e) => setUploadExamDate(e.target.value)}
               required
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -878,7 +878,7 @@ export default function StudentTestPapers() {
                 onChange={(e) => setUploadMarks(e.target.value)}
                 placeholder="e.g. 42.5"
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
@@ -892,7 +892,7 @@ export default function StudentTestPapers() {
                 onChange={(e) => setUploadMaxMarks(e.target.value)}
                 placeholder="e.g. 50"
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -966,7 +966,7 @@ export default function StudentTestPapers() {
                   value={editMarks}
                   onChange={(e) => setEditMarks(e.target.value)}
                   required
-                  className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
 
@@ -979,7 +979,7 @@ export default function StudentTestPapers() {
                   value={editMaxMarks}
                   onChange={(e) => setEditMaxMarks(e.target.value)}
                   required
-                  className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             </div>
@@ -1061,7 +1061,7 @@ export default function StudentTestPapers() {
 
             {/* Remarks / Faculty Comments */}
             {selectedPaper.remarks && (
-              <div className="p-3 rounded-xl bg-white border border-line text-xs">
+              <div className="p-3 rounded-xl bg-surface border border-line text-xs">
                 <span className="font-bold text-ink-900">Your Remarks: </span>
                 <span className="text-ink-700">{selectedPaper.remarks}</span>
               </div>
@@ -1084,7 +1084,7 @@ export default function StudentTestPapers() {
             )}
 
             {/* Document Viewer Frame */}
-            <div className="border border-line rounded-xl overflow-hidden bg-white">
+            <div className="border border-line rounded-xl overflow-hidden bg-surface">
               <div className="p-2.5 bg-mist border-b border-line flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2 truncate max-w-sm">
                   <FileText className="w-4 h-4 text-accent-500 shrink-0" />

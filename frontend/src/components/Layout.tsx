@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/auth'
 import { studentApi } from '../api'
 import {
   LayoutDashboard, Bell, ClipboardList, Star, Users, GraduationCap,
   Upload, Brain, LogOut, Menu, X, Info, HelpCircle, Shield,
-  ChevronDown, FileText, CheckSquare, CalendarCheck
+  ChevronDown, FileText, CheckSquare, CalendarCheck, Sun, Moon
 } from 'lucide-react'
 import { useQuery } from '../hooks/useQuery'
 
@@ -40,7 +40,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+
+  // Dark Mode State
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light'
+    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (saved === 'dark' || saved === 'light') return saved
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light'
+  })
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [theme])
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))
+  }
 
   const nav = navConfig[user?.role || 'student']
 
@@ -57,9 +82,108 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-mist text-ink-900 font-sans">
-      {/* ── Sidebar ── */}
+      {/* ── Mobile Sidebar Backdrop ── */}
+      {mobileNavOpen && (
+        <div
+          className="fixed inset-0 bg-ink-900/60 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          onClick={() => setMobileNavOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* ── Mobile Off-Canvas Drawer (<768px) ── */}
       <aside
-        className={`flex flex-col bg-white border-r border-line transition-all duration-300 ease-in-out shrink-0 sticky top-0 h-screen overflow-y-auto overflow-x-hidden shadow-xs z-30 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-surface border-r border-line shadow-2xl flex flex-col md:hidden transform transition-transform duration-300 ease-in-out ${
+          mobileNavOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-4 flex items-center justify-between border-b border-line min-h-[66px]">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-xs">
+              M
+            </div>
+            <div>
+              <div className="font-bold text-sm leading-tight text-ink-900">MIT School of</div>
+              <div className="text-xs font-semibold text-brand-600">Computing</div>
+            </div>
+          </div>
+          <button
+            onClick={() => setMobileNavOpen(false)}
+            className="p-2 rounded-xl text-ink-500 hover:text-ink-900 hover:bg-brand-50 transition min-w-[40px] min-h-[40px] flex items-center justify-center"
+            aria-label="Close navigation"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Role badge */}
+        <div className="px-4 pt-3 pb-2">
+          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-widest bg-brand-50 text-brand-700 border border-brand-200">
+            {user?.role}
+          </span>
+        </div>
+
+        {/* Nav links */}
+        <nav className="flex-1 px-3 py-3 space-y-1.5 overflow-y-auto">
+          {nav.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/student' || to === '/faculty' || to === '/admin'}
+              onClick={() => setMobileNavOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-semibold transition min-h-[44px] ${
+                  isActive
+                    ? 'bg-brand-100 text-brand-700 border-l-4 border-brand-600 shadow-xs'
+                    : 'text-ink-700 hover:bg-brand-50 hover:text-ink-900'
+                }`
+              }
+            >
+              <Icon size={20} className="shrink-0" />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Bottom utility links */}
+        <div className="px-3 pb-4 pt-2 border-t border-line space-y-1">
+          <NavLink
+            to="/privacy"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-ink-500 hover:bg-brand-50 hover:text-ink-900 transition min-h-[40px]"
+          >
+            <Shield size={18} className="shrink-0" />
+            <span>Privacy &amp; Data Use</span>
+          </NavLink>
+          <NavLink
+            to="/how-it-works"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-ink-500 hover:bg-brand-50 hover:text-ink-900 transition min-h-[40px]"
+          >
+            <HelpCircle size={18} className="shrink-0" />
+            <span>How It Works</span>
+          </NavLink>
+          <NavLink
+            to="/about"
+            onClick={() => setMobileNavOpen(false)}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-medium text-ink-500 hover:bg-brand-50 hover:text-ink-900 transition min-h-[40px]"
+          >
+            <Info size={18} className="shrink-0" />
+            <span>About System</span>
+          </NavLink>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-danger hover:bg-danger-bg transition min-h-[40px]"
+          >
+            <LogOut size={18} className="shrink-0" />
+            <span>Log Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ── Desktop Sidebar (>=768px) ── */}
+      <aside
+        className={`hidden md:flex flex-col bg-surface border-r border-line transition-all duration-300 ease-in-out shrink-0 sticky top-0 h-screen overflow-y-auto overflow-x-hidden shadow-xs z-30 ${
           sidebarOpen ? 'w-64' : 'w-16'
         }`}
       >
@@ -110,6 +234,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     : 'text-ink-700 hover:bg-brand-50 hover:text-ink-900'
                 }`
               }
+              title={!sidebarOpen ? label : undefined}
             >
               <Icon size={18} className="shrink-0" />
               {sidebarOpen && <span>{label}</span>}
@@ -126,6 +251,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 isActive ? 'bg-brand-100 text-brand-700 font-semibold' : 'text-ink-500 hover:bg-brand-50 hover:text-ink-900'
               }`
             }
+            title={!sidebarOpen ? 'Privacy & Data Use' : undefined}
           >
             <Shield size={16} className="shrink-0" />
             {sidebarOpen && <span>Privacy &amp; Data Use</span>}
@@ -137,6 +263,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 isActive ? 'bg-brand-100 text-brand-700 font-semibold' : 'text-ink-500 hover:bg-brand-50 hover:text-ink-900'
               }`
             }
+            title={!sidebarOpen ? 'How It Works' : undefined}
           >
             <HelpCircle size={16} className="shrink-0" />
             {sidebarOpen && <span>How It Works</span>}
@@ -148,6 +275,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 isActive ? 'bg-brand-100 text-brand-700 font-semibold' : 'text-ink-500 hover:bg-brand-50 hover:text-ink-900'
               }`
             }
+            title={!sidebarOpen ? 'About System' : undefined}
           >
             <Info size={16} className="shrink-0" />
             {sidebarOpen && <span>About System</span>}
@@ -155,6 +283,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-danger hover:bg-danger-bg transition"
+            title={!sidebarOpen ? 'Log Out' : undefined}
           >
             <LogOut size={16} className="shrink-0" />
             {sidebarOpen && <span>Log Out</span>}
@@ -165,27 +294,49 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── Main content area ── */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top header bar */}
-        <header className="sticky top-0 z-20 flex items-center justify-between px-6 h-16 gap-4 bg-brand-600 text-white border-b border-brand-700 shadow-xs">
-          <div>
-            <div className="text-sm font-bold tracking-tight text-white">
-              Student Academic Performance &amp; Dropout Risk Predictor
-            </div>
-            <div className="text-xs text-brand-100">
-              MIT School of Computing — Dept. of Computer Science &amp; Engineering
+        <header className="sticky top-0 z-30 flex items-center justify-between px-3.5 sm:px-6 h-16 gap-3 bg-brand-600 text-white border-b border-brand-700 shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              className="md:hidden p-2 -ml-1 rounded-xl text-white hover:bg-brand-700 transition min-w-[40px] min-h-[40px] flex items-center justify-center shrink-0"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={20} />
+            </button>
+
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-bold tracking-tight text-white truncate">
+                Student Academic Risk Predictor
+              </div>
+              <div className="text-[10px] sm:text-xs text-brand-100 truncate hidden xs:block">
+                MIT School of Computing — Dept. of CSE
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Dark Mode Toggle */}
+            <button
+              id="theme-toggle-btn"
+              onClick={toggleTheme}
+              className="p-2 rounded-xl text-white hover:bg-brand-700 transition min-w-[40px] min-h-[40px] flex items-center justify-center"
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+
             {/* Notification bell */}
             <button
               id="nav-notifications-btn"
               onClick={() => navigate(user?.role === 'student' ? '/student/alerts' : '#')}
-              className="relative p-2 rounded-xl text-white hover:bg-brand-700 transition"
+              className="relative p-2 rounded-xl text-white hover:bg-brand-700 transition min-w-[40px] min-h-[40px] flex items-center justify-center"
               aria-label="View notifications"
             >
               <Bell size={18} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center border-2 border-brand-600">
+                <span className="absolute 1 top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-danger text-white text-[10px] font-bold flex items-center justify-center border-2 border-brand-600">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
@@ -196,9 +347,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <button
                 id="nav-profile-btn"
                 onClick={() => setProfileOpen(!profileOpen)}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-white hover:bg-brand-700 transition"
+                className="flex items-center gap-1.5 sm:gap-2 px-2 py-1.5 rounded-xl text-white hover:bg-brand-700 transition min-h-[40px]"
               >
-                <div className="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs shadow-xs">
+                <div className="w-7 h-7 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                   {user?.full_name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="text-left hidden sm:block">
@@ -209,12 +360,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     {user?.role}
                   </div>
                 </div>
-                <ChevronDown size={14} className="text-brand-200" />
+                <ChevronDown size={14} className="text-brand-200 shrink-0" />
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-2xl bg-white border border-line shadow-lg py-1.5 z-50 text-ink-900">
-                  <div className="px-4 py-2 border-b border-line">
+                <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-surface border border-line shadow-xl py-1.5 z-50 text-ink-900">
+                  <div className="px-4 py-2.5 border-b border-line">
                     <div className="text-xs font-bold text-ink-900 truncate">
                       {user?.full_name}
                     </div>
@@ -227,7 +378,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold text-danger hover:bg-danger-bg transition flex items-center gap-2"
+                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-danger hover:bg-danger-bg transition flex items-center gap-2 min-h-[40px]"
                   >
                     <LogOut size={14} /> Log Out
                   </button>
@@ -238,17 +389,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6 sm:p-8 overflow-auto flex flex-col justify-between">
+        <main className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-x-hidden flex flex-col justify-between">
           <div className="max-w-7xl mx-auto w-full">{children}</div>
 
           {/* Institutional Footer */}
-          <footer className="mt-12 pt-6 border-t border-line text-xs text-ink-500 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white -mx-6 sm:-mx-8 -mb-6 sm:-mb-8 px-6 sm:px-8 py-4">
-            <div className="flex items-center gap-2">
+          <footer className="mt-12 pt-6 border-t border-line text-xs text-ink-500 flex flex-col sm:flex-row items-center justify-between gap-4 bg-surface -mx-3.5 sm:-mx-6 md:-mx-8 -mb-3.5 sm:-mb-6 md:-mb-8 px-4 sm:px-8 py-4">
+            <div className="flex items-center gap-2 text-center sm:text-left">
               <span className="font-semibold text-ink-700">MIT School of Computing</span>
               <span>•</span>
               <span>Department of Computer Science &amp; Engineering</span>
             </div>
-            <div className="flex items-center gap-4 text-ink-500">
+            <div className="flex flex-wrap justify-center items-center gap-4 text-ink-500">
               <NavLink to="/privacy" className="hover:text-brand-600 transition">Privacy &amp; Data Use</NavLink>
               <NavLink to="/how-it-works" className="hover:text-brand-600 transition">How It Works</NavLink>
               <NavLink to="/about" className="hover:text-brand-600 transition">About System</NavLink>

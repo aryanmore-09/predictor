@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  --color-surface: #FFFFFF;
   --color-brand-50: #ECFAF6;
   --color-brand-100: #D2F2EA;
   --color-brand-200: #A6E4D7;
@@ -36,6 +37,43 @@
 }
 
 /* ============================================================
+   DARK THEME OVERRIDE
+   ============================================================ */
+.dark {
+  --color-surface: #101A15;
+  --color-mist: #0B1310;
+  --color-line: #22322A;
+
+  --color-ink-300: #6B8A78;
+  --color-ink-500: #94B0A0;
+  --color-ink-700: #C4D8CC;
+  --color-ink-900: #EAF3ED;
+
+  /* Brand hues: dark tints for backgrounds, brightened accents for contrast */
+  --color-brand-50: #13271F;
+  --color-brand-100: #1B3B30;
+  --color-brand-200: #255143;
+  --color-brand-300: #33705E;
+  --color-brand-400: #3FB9AA;
+  --color-brand-500: #23A99D;
+  --color-brand-600: #149088;
+  --color-brand-700: #5BD5C5;
+  --color-brand-800: #8FE3D7;
+  --color-brand-900: #D8F5EE;
+
+  --color-accent-50: #10272B;
+  --color-accent-100: #163B42;
+  --color-accent-500: #1AB7C5;
+  --color-accent-600: #26C9D8;
+  --color-accent-700: #64D9E5;
+
+  --color-warning: #E09B36;
+  --color-warning-bg: #2C200B;
+  --color-danger: #F04438;
+  --color-danger-bg: #2E1210;
+}
+
+/* ============================================================
    RESET & BASE STYLES
    ============================================================ */
 *, *::before, *::after {
@@ -48,10 +86,11 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #F7FBF8;
-  color: #1F3D2B;
+  background-color: var(--color-mist);
+  color: var(--color-ink-900);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ============================================================
@@ -62,12 +101,12 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F8F3;
+  background: var(--color-mist);
 }
 ::-webkit-scrollbar-thumb {
-  background: #B7DCC1;
+  background: var(--color-line);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #66A97B;
+  background: var(--color-ink-300);
 }

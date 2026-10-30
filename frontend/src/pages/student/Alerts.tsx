@@ -79,7 +79,7 @@ export default function StudentAlerts() {
             {interventions.map((intv) => (
               <div
                 key={intv.id}
-                className="p-5 rounded-2xl bg-white border border-accent-100 shadow-sm flex items-start justify-between gap-4"
+                className="p-5 rounded-2xl bg-surface border border-accent-100 shadow-sm flex items-start justify-between gap-4"
               >
                 <div className="space-y-1">
                   <div className="text-[10px] font-bold text-accent-700 uppercase tracking-wider">
@@ -132,8 +132,8 @@ export default function StudentAlerts() {
                 <div
                   key={alert.id}
                   className={`p-4 rounded-2xl border flex items-center justify-between gap-4 transition shadow-xs ${alert.is_read
-                      ? 'bg-white border-line opacity-60'
-                      : 'bg-white border-line hover:border-brand-300'
+                      ? 'bg-surface border-line opacity-60'
+                      : 'bg-surface border-line hover:border-brand-300'
                     }`}
                 >
                   <div className="flex items-center gap-3.5">

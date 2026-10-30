@@ -18,7 +18,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    if (err.response?.status === 401 && !err.config?.url?.includes('/auth/login')) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('user')
       window.location.href = '/login'
@@ -81,11 +81,50 @@ export const adminApi = {
 }
 
 // ---- Predictions ----
+export interface SimulationRequest {
+  student_id?: number
+  attendance_percentage?: number
+  avg_marks?: number
+  assignment_submission_rate?: number
+  study_hours?: number
+  stress_score?: number
+  motivation_score?: number
+}
+
+export interface SimulationResult {
+  dropout_probability: number
+  risk_level: string
+  grade_band: string
+  pass_probability?: number
+  predicted_score?: number
+}
+
+export interface SimulationResponse {
+  student_id: number
+  original: SimulationResult
+  simulated: SimulationResult
+  base_features?: Record<string, number>
+  applied_overrides?: Record<string, number>
+}
+
+export interface PredictionHistoryItem {
+  id: number
+  student_id: number
+  risk_level: string
+  dropout_probability: number
+  predicted_grade_band?: string
+  pass_probability?: number
+  predicted_score?: number
+  created_at?: string
+}
+
 export const predictionApi = {
   predictStudent: (id: number) => api.post(`/predictions/predict/${id}`),
   predictAll: () => api.post('/predictions/predict-all'),
   triggerTraining: () => api.post('/predictions/train'),
   getModelInfo: () => api.get('/predictions/model-info'),
+  simulate: (data: SimulationRequest) => api.post<SimulationResponse>('/predictions/simulate', data),
+  getStudentHistory: (studentId: number) => api.get<PredictionHistoryItem[]>(`/predictions/student/${studentId}/history`),
 }
 
 // ---- Upload ----
@@ -104,6 +143,7 @@ export const reportApi = {
   exportStudentsCsv: () => api.get('/reports/students/csv', { responseType: 'blob' }),
   exportStudentDetailCsv: (id: number) => api.get(`/reports/student/${id}/csv`, { responseType: 'blob' }),
   exportInstitutionalCsv: () => api.get('/reports/institutional/csv', { responseType: 'blob' }),
+  exportStudentPdf: (id: number) => api.get(`/reports/student/${id}/pdf`, { responseType: 'blob' }),
 }
 
 // ---- Test Papers ----

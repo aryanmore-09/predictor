@@ -42,10 +42,10 @@ export const Modal: React.FC<ModalProps> = ({
   }[maxWidth]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-ink-900/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-ink-900/60 backdrop-blur-xs transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -54,19 +54,19 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative w-full ${maxWidthClass} bg-white border border-line rounded-2xl shadow-xl p-6 z-10 transition-all`}
+        className={`relative w-full ${maxWidthClass} bg-surface border border-line rounded-2xl shadow-xl p-5 sm:p-6 z-10 transition-all max-h-[calc(100vh-2rem)] overflow-y-auto my-auto`}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-brand-50 transition"
+          className="absolute top-4 right-4 p-1.5 rounded-lg text-ink-500 hover:text-ink-900 hover:bg-brand-50 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
           aria-label="Close dialog"
         >
           <X className="w-5 h-5" />
         </button>
 
         {title && (
-          <div className="mb-4 pr-6">
-            <h3 className="text-lg font-bold text-ink-900">{title}</h3>
+          <div className="mb-4 pr-8">
+            <h3 className="text-base sm:text-lg font-bold text-ink-900">{title}</h3>
             {description && <p className="text-xs text-ink-500 mt-0.5">{description}</p>}
           </div>
         )}
@@ -76,4 +76,3 @@ export const Modal: React.FC<ModalProps> = ({
     </div>
   )
 }
-

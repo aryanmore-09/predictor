@@ -6,13 +6,13 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 import io
 import csv
-import json
 from datetime import datetime
 
 from ..database import get_db
-from ..deps import get_faculty_or_admin
-from ..models.user import User
+from ..deps import get_faculty_or_admin, get_current_user
+from ..models.user import User, UserRole
 from ..models.academic import Student, AcademicRecord, AttendanceRecord, Prediction
+from ..services.report_service import ReportService
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
@@ -97,6 +97,43 @@ def export_student_detail_csv(
         iter([output.getvalue()]),
         media_type="text/csv",
         headers={"Content-Disposition": f"attachment; filename=student_{student.student_id}_report.csv"}
+    )
+
+
+@router.get("/student/{student_id}/pdf")
+def export_student_pdf(
+    student_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Export comprehensive student academic standing and risk report as PDF.
+    - Students can export their own report.
+    - Faculty/Admin can export any student's report.
+    """
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    if current_user.role == UserRole.student:
+        if student.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Students can only download their own report")
+    elif current_user.role not in [UserRole.faculty, UserRole.admin]:
+        raise HTTPException(status_code=403, detail="Permission denied")
+
+    try:
+        pdf_bytes = ReportService.generate_student_pdf(db, student_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate PDF: {e}")
+
+    return StreamingResponse(
+        io.BytesIO(pdf_bytes),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=student_{student.student_id}_report.pdf"
+        },
     )
 
 

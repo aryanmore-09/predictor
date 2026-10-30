@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 
@@ -229,6 +229,8 @@ class FacultyDashboard(BaseModel):
     class_avg_marks: float
 
 class AdminDashboard(BaseModel):
+    model_config = ConfigDict(protected_namespaces=())
+
     total_students: int
     total_faculty: int
     risk_distribution: dict

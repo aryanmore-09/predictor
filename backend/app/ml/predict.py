@@ -130,18 +130,21 @@ def get_recommendations(features: Dict[str, float], risk_level: str) -> List[str
     return recs[:6]
 
 
-def predict_student(db, student_id: int, model_dir: str) -> Dict[str, Any]:
-    """Generate prediction for a single student."""
+# NOTE: predicted_grade_band and predicted_score are derived by banding avg_marks
+# (heuristic), not by a trained regressor.
+def predict_from_features(features: Dict[str, Any], model_dir: str) -> Dict[str, Any]:
+    """Generate prediction from an arbitrary feature dictionary.
+
+    Note:
+        predicted_grade_band and predicted_score are derived by banding avg_marks
+        (heuristic), not by a trained regressor.
+    """
     model = load_model(model_dir)
     if model is None:
         raise RuntimeError("No trained model found. Please trigger training first.")
 
     scaler = load_scaler(model_dir)
     feature_cols = load_feature_columns(model_dir)
-
-    features = build_features_from_db(db, student_id)
-    if not features:
-        raise ValueError(f"No feature data found for student {student_id}")
 
     # Build feature vector in correct order
     X = np.array([[features.get(f, 0.0) for f in feature_cols]])
@@ -154,17 +157,32 @@ def predict_student(db, student_id: int, model_dir: str) -> Dict[str, Any]:
     grade_band = get_grade_band(avg_marks)
     pass_prob = get_pass_probability(avg_marks)
 
-    top_factors = explain_prediction(features, model_dir)
-    recommendations = get_recommendations(features, risk_level)
-
-    meta = load_model_meta(model_dir)
-
     return {
         "risk_level": risk_level,
         "dropout_probability": round(dropout_prob, 4),
         "predicted_grade_band": grade_band,
         "pass_probability": round(pass_prob, 4),
         "predicted_score": round(avg_marks, 2),
+    }
+
+
+def predict_student(db, student_id: int, model_dir: str) -> Dict[str, Any]:
+    """Generate prediction for a single student."""
+    features = build_features_from_db(db, student_id)
+    if not features:
+        raise ValueError(f"No feature data found for student {student_id}")
+
+    pred_res = predict_from_features(features, model_dir)
+    top_factors = explain_prediction(features, model_dir)
+    recommendations = get_recommendations(features, pred_res["risk_level"])
+    meta = load_model_meta(model_dir)
+
+    return {
+        "risk_level": pred_res["risk_level"],
+        "dropout_probability": pred_res["dropout_probability"],
+        "predicted_grade_band": pred_res["predicted_grade_band"],
+        "pass_probability": pred_res["pass_probability"],
+        "predicted_score": pred_res["predicted_score"],
         "top_factors": top_factors,
         "recommendations": recommendations,
         "model_version": meta.get("version", "unknown"),

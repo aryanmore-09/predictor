@@ -246,6 +246,21 @@ export default function FacultyAttendanceManagement() {
       s.student_code.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  if (loading) {
+    return (
+      <div className="space-y-6 py-2">
+        <Skeleton className="h-24 w-full" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
+        </div>
+        <Skeleton className="h-80 w-full" />
+      </div>
+    )
+  }
+
   const selectedSessionObj = sessions.find((s) => s.id === selectedSessionId)
 
   return (
@@ -323,7 +338,7 @@ export default function FacultyAttendanceManagement() {
                 <select
                   value={selectedSessionId || ''}
                   onChange={(e) => setSelectedSessionId(Number(e.target.value))}
-                  className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900 font-medium"
+                  className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900 font-medium"
                 >
                   {sessions.map((sess) => (
                     <option key={sess.id} value={sess.id}>
@@ -342,7 +357,7 @@ export default function FacultyAttendanceManagement() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name or roll number..."
-                    className="w-full text-xs rounded-xl border border-line bg-white pl-8 pr-3 py-2 text-ink-900"
+                    className="w-full text-xs rounded-xl border border-line bg-surface pl-8 pr-3 py-2 text-ink-900"
                   />
                 </div>
               </div>
@@ -447,7 +462,7 @@ export default function FacultyAttendanceManagement() {
                                 className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
                                   isSelected
                                     ? selectedClass
-                                    : 'text-ink-700 hover:bg-white hover:text-ink-900'
+                                    : 'text-ink-700 hover:bg-surface hover:text-ink-900'
                                 }`}
                               >
                                 {st}
@@ -665,7 +680,7 @@ export default function FacultyAttendanceManagement() {
               value={newSubject}
               onChange={(e) => setNewSubject(e.target.value)}
               required
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
             >
               {SUBJECT_OPTIONS.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -681,7 +696,7 @@ export default function FacultyAttendanceManagement() {
                 value={newDate}
                 onChange={(e) => setNewDate(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
               />
             </div>
             <div>
@@ -691,7 +706,7 @@ export default function FacultyAttendanceManagement() {
                 value={newDivision}
                 onChange={(e) => setNewDivision(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
               />
             </div>
           </div>
@@ -704,7 +719,7 @@ export default function FacultyAttendanceManagement() {
                 value={newStart}
                 onChange={(e) => setNewStart(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
               />
             </div>
             <div>
@@ -714,7 +729,7 @@ export default function FacultyAttendanceManagement() {
                 value={newEnd}
                 onChange={(e) => setNewEnd(e.target.value)}
                 required
-                className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+                className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
               />
             </div>
           </div>
@@ -726,7 +741,7 @@ export default function FacultyAttendanceManagement() {
               value={newTopic}
               onChange={(e) => setNewTopic(e.target.value)}
               placeholder="e.g. Graph Traversals (BFS & DFS)"
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
             />
           </div>
 
@@ -755,7 +770,7 @@ export default function FacultyAttendanceManagement() {
               value={csvSubject}
               onChange={(e) => setCsvSubject(e.target.value)}
               required
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
             >
               {SUBJECT_OPTIONS.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -770,7 +785,7 @@ export default function FacultyAttendanceManagement() {
               value={csvDate}
               onChange={(e) => setCsvDate(e.target.value)}
               required
-              className="w-full text-xs rounded-xl border border-line bg-white px-3 py-2 text-ink-900"
+              className="w-full text-xs rounded-xl border border-line bg-surface px-3 py-2 text-ink-900"
             />
           </div>
 

@@ -10,4 +10,4 @@ export * from './Modal'
 export * from './ProgressBar'
 export * from './Skeleton'
 export * from './EmptyState'
-
+export * from './Spotlight'
