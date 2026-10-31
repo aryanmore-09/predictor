@@ -661,6 +661,47 @@ def seed_or_update_story_students(db: Session, created_users: dict, now: datetim
     return story_student_ids
 
 
+def seed_demo_test_papers(db: Session) -> int:
+    """Create a few pending test papers so the faculty verification queue is populated."""
+    from app.models.test_paper import TestPaper
+
+    if db.query(TestPaper).count() > 0:
+        return 0
+
+    subjects = [
+        "Data Structures & Algorithms", "Object-Oriented Programming",
+        "Database Management Systems", "Computer Networks", "Operating Systems",
+        "Discrete Mathematics", "Software Engineering", "Artificial Intelligence",
+    ]
+    exam_types = ["Unit Test", "Midterm", "Quiz", "Assignment", "Endterm"]
+
+    rng = random.Random(11)
+    students = db.query(Student).filter(Student.id > 6).limit(15).all()
+    created = 0
+    for i, s in enumerate(students):
+        subject = rng.choice(subjects)
+        exam_type = rng.choice(exam_types)
+        max_marks = rng.choice([20, 25, 50, 100])
+        marks = round(rng.uniform(max_marks * 0.35, max_marks * 0.95), 1)
+        db.add(TestPaper(
+            student_id=s.id,
+            subject=subject,
+            exam_type=exam_type,
+            exam_date=datetime.utcnow() - timedelta(days=rng.randint(3, 20)),
+            marks_obtained=marks,
+            max_marks=float(max_marks),
+            file_path=f"uploads/test_papers/{s.id}/demo_{i}.pdf",
+            original_filename=f"{subject.replace(' ', '_')}_{exam_type}.pdf",
+            file_type="application/pdf",
+            file_size=rng.randint(90_000, 420_000),
+            remarks="Submitted for faculty verification.",
+            status="Pending",
+        ))
+        created += 1
+    db.commit()
+    return created
+
+
 def seed_database():
     print("🚀 Starting database seed...")
     Base.metadata.create_all(bind=engine)
@@ -1010,6 +1051,10 @@ def seed_database():
 
             db.commit()
             print("  Predictions generated with 6-8 weekly historical checkpoints.")
+
+        papers = seed_demo_test_papers(db)
+        if papers:
+            print(f"  Seeded {papers} pending test papers for faculty verification.")
 
         print("\n✅ Seed complete!")
         print("Demo accounts:")
