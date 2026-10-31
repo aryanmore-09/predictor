@@ -971,7 +971,7 @@ def seed_database():
                         created_dt = now - timedelta(days=w * 7 + random.randint(0, 1), hours=random.randint(1, 12))
                         if w == 0:
                             # Spread the latest probability so the roster does not show 100% for everyone
-                            p_val = float(np.clip(base_prob + (random.random() - 0.5) * 0.24, 0.03, 0.97))
+                            p_val = float(np.clip(base_prob * random.uniform(0.74, 1.0), 0.03, 0.97))
                             s_val = base_score
                         else:
                             drift = (random.random() - 0.5) * 0.18
