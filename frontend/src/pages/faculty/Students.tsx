@@ -6,21 +6,28 @@ import { facultyApi } from '../../api'
 import { Card, Input, Select, Button, RiskBadge, Skeleton, EmptyState } from '../../components/ui'
 
 export default function FacultyStudents() {
+  const PAGE_SIZE = 20
   const [students, setStudents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [riskFilter, setRiskFilter] = useState('')
   const [semFilter, setSemFilter] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [pages, setPages] = useState(1)
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (targetPage = 1) => {
     setLoading(true)
     try {
-      const params: any = {}
+      const params: any = { page: targetPage, page_size: PAGE_SIZE }
       if (search) params.search = search
       if (riskFilter) params.risk_level = riskFilter
       if (semFilter) params.semester = semFilter
       const res = await facultyApi.getStudents(params)
-      setStudents(res.data || [])
+      setStudents(res.data?.items || [])
+      setTotal(res.data?.total || 0)
+      setPages(res.data?.pages || 1)
+      setPage(res.data?.page || targetPage)
     } catch {
       toast.error('Failed to load students')
     } finally {
@@ -29,7 +36,8 @@ export default function FacultyStudents() {
   }
 
   useEffect(() => {
-    fetchStudents()
+    setPage(1)
+    fetchStudents(1)
   }, [riskFilter, semFilter])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -82,7 +90,7 @@ export default function FacultyStudents() {
           <Button
             variant="primary"
             size="md"
-            onClick={fetchStudents}
+            onClick={() => fetchStudents(1)}
           >
             Filter
           </Button>
@@ -170,6 +178,23 @@ export default function FacultyStudents() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && total > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-line text-xs">
+            <span className="text-ink-500">
+              Showing <b>{((page - 1) * PAGE_SIZE) + 1}</b>–<b>{Math.min(page * PAGE_SIZE, total)}</b> of <b>{total}</b> students
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" size="sm" onClick={() => fetchStudents(page - 1)} disabled={page <= 1}>
+                Previous
+              </Button>
+              <span className="px-2 font-semibold text-ink-700">Page {page} of {pages}</span>
+              <Button variant="secondary" size="sm" onClick={() => fetchStudents(page + 1)} disabled={page >= pages}>
+                Next
+              </Button>
+            </div>
           </div>
         )}
       </Card>

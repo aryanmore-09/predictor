@@ -83,42 +83,77 @@ def faculty_dashboard(db: Session = Depends(get_db), current_user: User = Depend
     }
 
 
-@router.get("/students", response_model=List[StudentSummary])
+@router.get("/students")
 def list_students(
     risk_level: Optional[str] = None,
     search: Optional[str] = None,
     semester: Optional[int] = None,
+    page: int = 1,
+    page_size: int = 20,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_faculty_or_admin)
 ):
+    """Paginated student directory. Bulk-loads predictions/attendance/marks to avoid N+1."""
+    page = max(1, int(page))
+    page_size = max(1, min(100, int(page_size)))
+
     q = db.query(Student)
     if semester:
         q = q.filter(Student.semester == semester)
     students = q.all()
 
+    # Latest prediction per student (single query)
+    pred_rows = db.query(Prediction).order_by(Prediction.student_id, Prediction.created_at.desc()).all()
+    pred_by = {}
+    for p in pred_rows:
+        if p.student_id not in pred_by:
+            pred_by[p.student_id] = p
+
+    # Attendance and marks aggregates (single query each)
+    att_by = {}
+    for sid, pct in db.query(AttendanceRecord.student_id, AttendanceRecord.attendance_percentage).all():
+        att_by.setdefault(sid, []).append(pct or 0.0)
+    marks_by = {}
+    for sid, total, mx in db.query(
+        AcademicRecord.student_id, AcademicRecord.total_marks, AcademicRecord.max_marks
+    ).all():
+        marks_by.setdefault(sid, []).append((total or 0) / (mx or 100) * 100)
+
     result = []
+    search_l = search.lower() if search else None
     for s in students:
-        if search and search.lower() not in s.full_name.lower() and search.lower() not in s.student_id.lower():
-            continue
-        pred = db.query(Prediction).filter(Prediction.student_id == s.id).order_by(Prediction.created_at.desc()).first()
+        pred = pred_by.get(s.id)
         rl = pred.risk_level.value if pred else None
         if risk_level and rl != risk_level:
             continue
+        if search_l and search_l not in s.full_name.lower() and search_l not in s.student_id.lower():
+            continue
 
-        att = db.query(AttendanceRecord).filter(AttendanceRecord.student_id == s.id).all()
-        marks = db.query(AcademicRecord).filter(AcademicRecord.student_id == s.id).all()
-        avg_att = sum(r.attendance_percentage for r in att) / len(att) if att else None
-        avg_marks = sum((r.total_marks or 0) / (r.max_marks or 100) * 100 for r in marks) / len(marks) if marks else None
+        att_list = att_by.get(s.id, [])
+        marks_list = marks_by.get(s.id, [])
+        avg_att = sum(att_list) / len(att_list) if att_list else None
+        avg_marks = sum(marks_list) / len(marks_list) if marks_list else None
 
         result.append(StudentSummary(
             id=s.id, student_id=s.student_id, full_name=s.full_name, email=s.email,
             semester=s.semester, risk_level=rl,
             dropout_probability=pred.dropout_probability if pred else None,
             pass_probability=pred.pass_probability if pred else None,
-            attendance_percentage=round(avg_att, 1) if avg_att else None,
-            avg_marks=round(avg_marks, 1) if avg_marks else None,
+            attendance_percentage=round(avg_att, 1) if avg_att is not None else None,
+            avg_marks=round(avg_marks, 1) if avg_marks is not None else None,
         ))
-    return result
+
+    total = len(result)
+    pages = max(1, (total + page_size - 1) // page_size)
+    page = min(page, pages)
+    start = (page - 1) * page_size
+    return {
+        "items": result[start:start + page_size],
+        "total": total,
+        "page": page,
+        "pages": pages,
+        "page_size": page_size,
+    }
 
 
 @router.get("/students/{student_id}/detail")
