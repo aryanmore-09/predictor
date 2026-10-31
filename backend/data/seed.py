@@ -702,6 +702,21 @@ def seed_demo_test_papers(db: Session) -> int:
     return created
 
 
+def assign_mentors(db: Session) -> int:
+    """Assign every student without a mentor to one of the demo faculty, alternating."""
+    faculty_list = db.query(Faculty).order_by(Faculty.id).all()
+    if not faculty_list:
+        return 0
+    students = db.query(Student).order_by(Student.id).all()
+    assigned = 0
+    for i, s in enumerate(students):
+        if not s.mentor_id:
+            s.mentor_id = faculty_list[i % len(faculty_list)].id
+            assigned += 1
+    db.commit()
+    return assigned
+
+
 def seed_database():
     print("🚀 Starting database seed...")
     Base.metadata.create_all(bind=engine)
@@ -1051,6 +1066,10 @@ def seed_database():
 
             db.commit()
             print("  Predictions generated with 6-8 weekly historical checkpoints.")
+
+        assigned = assign_mentors(db)
+        if assigned:
+            print(f"  Assigned mentors to {assigned} students.")
 
         papers = seed_demo_test_papers(db)
         if papers:

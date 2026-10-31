@@ -1,9 +1,9 @@
 """
 Admin router — institution-wide management and analytics.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 import json
 
@@ -14,11 +14,12 @@ from ..models.academic import (
     Student, Faculty, AcademicRecord, AttendanceRecord, AttendanceEntry,
     AssignmentRecord, QuizRecord, SurveyResponse, LMSData,
     Prediction, Alert, Intervention, CounselorReferral,
-    DataUpload, ModelVersion, AuditLog
+    DataUpload, ModelVersion, AuditLog, Outbox
 )
 from ..schemas.auth import UserCreate, UserResponse
 from ..services.auth_service import get_password_hash
-from ..schemas.student import DataQualityReport
+from ..schemas.student import DataQualityReport, MentorAssignRequest
+from ..services.audit_service import log_audit
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -88,7 +89,7 @@ def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_a
 
 
 @router.post("/users", response_model=UserResponse)
-def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
+def create_user(data: UserCreate, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
     if db.query(User).filter(User.email == data.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     user = User(
@@ -100,17 +101,66 @@ def create_user(data: UserCreate, db: Session = Depends(get_db), current_user: U
     db.add(user)
     db.commit()
     db.refresh(user)
+    log_audit(db, current_user.id, "CREATE_USER", "user", user.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"role={user.role.value}")
     return user
 
 
 @router.put("/users/{user_id}/toggle-active")
-def toggle_user_active(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
+def toggle_user_active(user_id: int, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user.is_active = not user.is_active
     db.commit()
+    log_audit(db, current_user.id, "TOGGLE_USER", "user", user.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"is_active={user.is_active}")
     return {"id": user_id, "is_active": user.is_active}
+
+
+@router.get("/faculty")
+def list_faculty(db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
+    rows = db.query(Faculty).order_by(Faculty.id).all()
+    return [
+        {"id": f.id, "full_name": f.full_name, "email": f.email, "department": f.department}
+        for f in rows
+    ]
+
+
+@router.put("/students/{student_id}/mentor")
+def assign_mentor(
+    student_id: int,
+    data: MentorAssignRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin),
+):
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if data.mentor_id is not None:
+        fac = db.query(Faculty).filter(Faculty.id == data.mentor_id).first()
+        if not fac:
+            raise HTTPException(status_code=404, detail="Mentor not found")
+    student.mentor_id = data.mentor_id
+    db.commit()
+    db.refresh(student)
+    log_audit(db, current_user.id, "ASSIGN_MENTOR", "student", student.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"mentor_id={data.mentor_id}")
+    return {"student_id": student.id, "mentor_id": student.mentor_id}
+
+
+@router.get("/outbox")
+def list_outbox(db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
+    rows = db.query(Outbox).order_by(Outbox.created_at.desc()).limit(100).all()
+    return [
+        {"id": o.id, "to_email": o.to_email, "subject": o.subject, "body": o.body,
+         "status": o.status, "created_at": o.created_at.isoformat() if o.created_at else None}
+        for o in rows
+    ]
 
 
 @router.get("/students")
@@ -121,6 +171,7 @@ def list_all_students(db: Session = Depends(get_db), current_user: User = Depend
         pred = db.query(Prediction).filter(Prediction.student_id == s.id).order_by(Prediction.created_at.desc()).first()
         result.append({
             "id": s.id,
+            "mentor_id": s.mentor_id,
             "student_id": s.student_id,
             "full_name": s.full_name,
             "email": s.email,
@@ -366,9 +417,28 @@ def delete_student_data(student_id: int, db: Session = Depends(get_db), current_
 
 
 @router.get("/audit-logs")
-def list_audit_logs(db: Session = Depends(get_db), current_user: User = Depends(get_admin)):
-    """Retrieve system audit logs for administrative actions and data subject requests."""
-    logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(100).all()
+def list_audit_logs(
+    user_id: Optional[int] = None,
+    action: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin),
+):
+    """Retrieve system audit logs, optionally filtered by user, action, or date range."""
+    q = db.query(AuditLog)
+    if user_id:
+        q = q.filter(AuditLog.user_id == user_id)
+    if action:
+        q = q.filter(AuditLog.action == action)
+    try:
+        if start_date:
+            q = q.filter(AuditLog.timestamp >= datetime.fromisoformat(start_date))
+        if end_date:
+            q = q.filter(AuditLog.timestamp <= datetime.fromisoformat(end_date + "T23:59:59"))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    logs = q.order_by(AuditLog.timestamp.desc()).limit(200).all()
     return [
         {
             "id": log.id,
@@ -376,6 +446,7 @@ def list_audit_logs(db: Session = Depends(get_db), current_user: User = Depends(
             "action": log.action,
             "target_type": log.target_type,
             "target_id": log.target_id,
+            "ip_address": getattr(log, "ip_address", None),
             "details": log.details,
             "timestamp": log.timestamp.isoformat() if log.timestamp else None
         }

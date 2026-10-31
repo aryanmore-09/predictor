@@ -35,6 +35,8 @@ class Student(Base):
     phone = Column(String, nullable=True)
     guardian_name = Column(String, nullable=True)
     guardian_phone = Column(String, nullable=True)
+    guardian_email = Column(String, nullable=True)
+    mentor_id = Column(Integer, ForeignKey("faculty.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="student_profile")
@@ -50,6 +52,7 @@ class Student(Base):
     counselor_referrals = relationship("CounselorReferral", back_populates="student", cascade="all, delete-orphan")
     lms_data = relationship("LMSData", back_populates="student", cascade="all, delete-orphan")
     notifications = relationship("Notification", back_populates="student", cascade="all, delete-orphan")
+    mentor = relationship("Faculty", foreign_keys=[mentor_id])
 
 
 class Faculty(Base):
@@ -212,6 +215,8 @@ class Intervention(Base):
     student_id = Column(Integer, ForeignKey("students.id"))
     faculty_id = Column(Integer, ForeignKey("faculty.id"), nullable=True)
     message = Column(Text, nullable=False)
+    follow_up_date = Column(DateTime, nullable=True)
+    outcome = Column(String, nullable=True)  # improved | no_change | worsened | pending
     is_acknowledged = Column(Boolean, default=False)
     acknowledged_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -305,4 +310,16 @@ class AuditLog(Base):
     target_type = Column(String, nullable=False)  # e.g., "student"
     target_id = Column(String, nullable=False)
     details = Column(Text, nullable=True)
+    ip_address = Column(String, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+
+class Outbox(Base):
+    __tablename__ = "outbox"
+
+    id = Column(Integer, primary_key=True, index=True)
+    to_email = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    body = Column(Text, nullable=False)
+    status = Column(String, default="logged")  # sent | logged | failed
+    created_at = Column(DateTime, default=datetime.utcnow)

@@ -15,6 +15,8 @@ class StudentBase(BaseModel):
     phone: Optional[str] = None
     guardian_name: Optional[str] = None
     guardian_phone: Optional[str] = None
+    guardian_email: Optional[str] = None
+    mentor_id: Optional[int] = None
 
 class StudentCreate(StudentBase):
     pass
@@ -155,16 +157,27 @@ class LMSDataResponse(LMSDataCreate):
 class InterventionCreate(BaseModel):
     student_id: int
     message: str
+    follow_up_date: Optional[datetime] = None
+
+class InterventionUpdate(BaseModel):
+    follow_up_date: Optional[datetime] = None
+    outcome: Optional[str] = None  # improved | no_change | worsened | pending
+    message: Optional[str] = None
 
 class InterventionResponse(BaseModel):
     id: int
     student_id: int
     faculty_id: Optional[int]
     message: str
+    follow_up_date: Optional[datetime] = None
+    outcome: Optional[str] = None
     is_acknowledged: bool
     created_at: datetime
     class Config:
         from_attributes = True
+
+class MentorAssignRequest(BaseModel):
+    mentor_id: Optional[int] = None
 
 # ---------- Counselor Referral Schemas ----------
 class CounselorReferralCreate(BaseModel):

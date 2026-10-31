@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { facultyApi, predictionApi, reportApi, testPaperApi, attendanceApi } from '../../api'
 import type { TestPaper, AttendanceSummary, SubjectAttendance, CalendarDayItem } from '../../api'
-import { Card, StatCard, Button, RiskBadge, Textarea, Skeleton, Modal, EmptyState } from '../../components/ui'
+import { Card, StatCard, Button, RiskBadge, Textarea, Skeleton, Modal, EmptyState, Select } from '../../components/ui'
 import WhatIfSimulator from '../../components/WhatIfSimulator'
 import RiskTrendChart from '../../components/RiskTrendChart'
 
@@ -21,6 +21,16 @@ export default function FacultyStudentDetail() {
   // Intervention modal / input
   const [interventionMsg, setInterventionMsg] = useState('')
   const [sendingIntv, setSendingIntv] = useState(false)
+
+  const handleSetOutcome = async (id: number, outcome: string) => {
+    try {
+      await facultyApi.updateIntervention(id, { outcome })
+      toast.success('Intervention outcome updated')
+      loadData()
+    } catch {
+      toast.error('Failed to update outcome')
+    }
+  }
 
   // Referral
   const [referralReason, setReferralReason] = useState('')
@@ -335,16 +345,34 @@ export default function FacultyStudentDetail() {
 
           {/* Past Interventions */}
           {data?.interventions?.length > 0 ? (
-            <div className="pt-3 border-t border-line space-y-2">
-              <div className="text-xs font-bold text-ink-700 uppercase tracking-wider">Previous Interventions:</div>
-              {data.interventions.slice(0, 3).map((it: any) => (
-                <div key={it.id} className="p-3 rounded-xl bg-mist border border-line text-xs">
-                  <div className="text-ink-900 font-medium">{it.message}</div>
-                  <div className="text-[10px] text-ink-500 mt-1 flex justify-between">
-                    <span>{new Date(it.created_at).toLocaleDateString()}</span>
-                    <span className={it.is_acknowledged ? 'text-brand-600 font-bold' : 'text-warning font-semibold'}>
-                      {it.is_acknowledged ? 'Acknowledged' : 'Pending Ack'}
-                    </span>
+            <div className="pt-3 border-t border-line space-y-2 max-h-80 overflow-y-auto">
+              <div className="text-xs font-bold text-ink-700 uppercase tracking-wider">Intervention Timeline:</div>
+              {data.interventions.map((it: any) => (
+                <div key={it.id} className="p-3 rounded-xl bg-mist border border-line text-xs space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-ink-900 font-medium flex-1">{it.message}</div>
+                    <span className="text-[10px] text-ink-500 shrink-0">{new Date(it.created_at).toLocaleDateString()}</span>
+                  </div>
+                  {it.prob_delta !== null && it.prob_delta !== undefined && (
+                    <div className="flex items-center gap-2 text-[11px]">
+                      <span className="text-ink-500">Risk change:</span>
+                      <span className={it.prob_delta < 0 ? 'text-brand-700 font-bold' : it.prob_delta > 0 ? 'text-danger font-bold' : 'text-ink-500 font-bold'}>
+                        {it.prob_delta > 0 ? '+' : ''}{(it.prob_delta * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-ink-500">Outcome:</span>
+                    <Select
+                      value={it.outcome || 'pending'}
+                      onChange={(e) => handleSetOutcome(it.id, e.target.value)}
+                      className="text-xs"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="improved">Improved</option>
+                      <option value="no_change">No change</option>
+                      <option value="worsened">Worsened</option>
+                    </Select>
                   </div>
                 </div>
               ))}

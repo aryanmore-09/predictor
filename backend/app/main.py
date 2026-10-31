@@ -32,6 +32,27 @@ def ensure_sqlite_schema():
 
 ensure_sqlite_schema()
 
+
+def ensure_workflow_schema():
+    """Idempotent ALTERs for Prompt-3 columns on existing SQLite databases."""
+    specs = {
+        "students": [("mentor_id", "INTEGER"), ("guardian_email", "VARCHAR")],
+        "interventions": [("follow_up_date", "DATETIME"), ("outcome", "VARCHAR")],
+        "audit_logs": [("ip_address", "VARCHAR")],
+    }
+    with engine.connect() as conn:
+        for table, cols in specs.items():
+            existing = [r[1] for r in conn.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()]
+            if not existing:
+                continue
+            for name, ctype in cols:
+                if name not in existing:
+                    conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {name} {ctype}")
+        conn.commit()
+
+
+ensure_workflow_schema()
+
 def ensure_startup_data():
     from .models.user import User
     from .models.academic import Student

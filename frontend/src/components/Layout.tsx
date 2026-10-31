@@ -5,7 +5,7 @@ import { studentApi } from '../api'
 import {
   LayoutDashboard, Bell, ClipboardList, Star, Users, GraduationCap,
   Upload, Brain, LogOut, Menu, X, Info, HelpCircle, Shield,
-  ChevronDown, FileText, CheckSquare, CalendarCheck, Sun, Moon
+  ChevronDown, FileText, CheckSquare, CalendarCheck, Sun, Moon, Mail
 } from 'lucide-react'
 import { useQuery } from '../hooks/useQuery'
 
@@ -33,6 +33,9 @@ const navConfig = {
     { to: '/faculty/verifications', icon: CheckSquare, label: 'Verifications' },
     { to: '/admin/upload', icon: Upload, label: 'Data Upload' },
     { to: '/faculty/students', icon: GraduationCap, label: 'All Students' },
+    { to: '/admin/assignments', icon: Users, label: 'Assignments' },
+    { to: '/admin/outbox', icon: Mail, label: 'Outbox' },
+    { to: '/admin/audit', icon: Shield, label: 'Audit Log' },
   ],
 }
 

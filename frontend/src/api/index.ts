@@ -53,10 +53,12 @@ export const studentApi = {
 // ---- Faculty ----
 export const facultyApi = {
   getDashboard: () => api.get('/faculty/dashboard'),
-  getStudents: (params?: Record<string, string>) => api.get('/faculty/students', { params }),
+  getStudents: (params?: Record<string, string | number>) => api.get('/faculty/students', { params }),
   getStudentDetail: (id: number) => api.get(`/faculty/students/${id}/detail`),
   sendIntervention: (student_id: number, message: string) =>
     api.post('/faculty/interventions', { student_id, message }),
+  updateIntervention: (id: number, data: { outcome?: string; follow_up_date?: string; message?: string }) =>
+    api.put(`/faculty/interventions/${id}`, data),
   createReferral: (student_id: number, reason: string) =>
     api.post('/faculty/referrals', { student_id, reason }),
   updateReferral: (id: number, status: string, notes?: string) =>
@@ -77,7 +79,11 @@ export const adminApi = {
   getDataQuality: () => api.get('/admin/data-quality'),
   exportDsr: (student_id: number) => api.get(`/admin/dsr/export/${student_id}`),
   deleteDsr: (student_id: number) => api.delete(`/admin/dsr/delete/${student_id}`),
-  getAuditLogs: () => api.get('/admin/audit-logs'),
+  getAuditLogs: (params?: Record<string, string>) => api.get('/admin/audit-logs', { params }),
+  getFaculty: () => api.get('/admin/faculty'),
+  assignMentor: (student_id: number, mentor_id: number | null) =>
+    api.put(`/admin/students/${student_id}/mentor`, { mentor_id }),
+  getOutbox: () => api.get('/admin/outbox'),
 }
 
 // ---- Predictions ----

@@ -1,7 +1,7 @@
 """
 Predictions router — ML prediction endpoints.
 """
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from sqlalchemy.orm import Session
 from typing import List
 import json
@@ -72,6 +72,27 @@ def _save_prediction(db: Session, student_id: int, pred: dict):
                     notification_type="alert",
                 )
                 db.add(notif)
+
+    # Email escalation when risk rises to HIGH
+    if pred["risk_level"] == "high" and old_risk != "high" and student:
+        try:
+            from ..services.email_service import send_email
+            if student.mentor and student.mentor.user:
+                send_email(
+                    db, student.mentor.user.email,
+                    f"[High Risk] {student.full_name} ({student.student_id})",
+                    f"Student {student.full_name} has escalated to HIGH dropout risk. "
+                    f"Probability: {pred['dropout_probability']:.0%}. Please review the student profile.",
+                )
+            if student.guardian_email:
+                send_email(
+                    db, student.guardian_email,
+                    f"Academic risk advisory for {student.full_name}",
+                    f"Your ward {student.full_name} has been flagged as high risk. "
+                    f"Please contact the assigned faculty mentor.",
+                )
+        except Exception as e:
+            print(f"[EMAIL] escalation failed: {e}")
 
     db.commit()
     return new_pred
@@ -305,6 +326,7 @@ def get_student_prediction_history(
 
 @router.post("/train")
 def trigger_training(
+    http_request: Request,
     request: TrainRequest = TrainRequest(),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_admin)
@@ -357,6 +379,11 @@ def trigger_training(
     db.query(ModelVersion).update({"is_active": False})
     db.add(mv)
     db.commit()
+
+    from ..services.audit_service import log_audit
+    log_audit(db, current_user.id, "RETRAIN_MODEL", "model", meta["version"],
+              ip_address=http_request.client.host if http_request.client else None,
+              details=f"algorithm={meta['best_algorithm']}")
 
     return {
         "status": "success",

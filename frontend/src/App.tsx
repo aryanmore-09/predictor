@@ -18,6 +18,9 @@ import AdminAttendanceAnalytics from './pages/admin/AttendanceAnalytics'
 import AdminUsers from './pages/admin/Users'
 import AdminModels from './pages/admin/Models'
 import AdminUpload from './pages/admin/Upload'
+import AdminAssignments from './pages/admin/Assignments'
+import AdminOutbox from './pages/admin/Outbox'
+import AdminAuditLog from './pages/admin/AuditLog'
 import AboutPage from './pages/About'
 import HowItWorks from './pages/HowItWorks'
 import PrivacyPage from './pages/Privacy'
@@ -103,6 +106,9 @@ export default function App() {
         <Route path="/admin/users" element={<PrivateRoute roles={['admin']}><Layout><AdminUsers /></Layout></PrivateRoute>} />
         <Route path="/admin/models" element={<PrivateRoute roles={['admin']}><Layout><AdminModels /></Layout></PrivateRoute>} />
         <Route path="/admin/upload" element={<PrivateRoute roles={['admin', 'faculty']}><Layout><AdminUpload /></Layout></PrivateRoute>} />
+        <Route path="/admin/assignments" element={<PrivateRoute roles={['admin']}><Layout><AdminAssignments /></Layout></PrivateRoute>} />
+        <Route path="/admin/outbox" element={<PrivateRoute roles={['admin']}><Layout><AdminOutbox /></Layout></PrivateRoute>} />
+        <Route path="/admin/audit" element={<PrivateRoute roles={['admin']}><Layout><AdminAuditLog /></Layout></PrivateRoute>} />
 
         <Route path="/" element={<Navigate to={defaultRoute()} replace />} />
         <Route path="*" element={<Navigate to={defaultRoute()} replace />} />

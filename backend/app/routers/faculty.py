@@ -1,7 +1,7 @@
 """
 Faculty router — faculty-facing endpoints.
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import json
@@ -14,10 +14,11 @@ from ..models.academic import (
     Intervention, CounselorReferral, Faculty, Alert, Notification
 )
 from ..schemas.student import (
-    StudentSummary, InterventionCreate, InterventionResponse,
+    StudentSummary, InterventionCreate, InterventionUpdate, InterventionResponse,
     CounselorReferralCreate, CounselorReferralResponse, CounselorReferralUpdate,
     AcademicRecordCreate, AcademicRecordResponse, AttendanceCreate, AttendanceResponse
 )
+from ..services.audit_service import log_audit
 
 router = APIRouter(prefix="/api/faculty", tags=["faculty"])
 
@@ -29,9 +30,17 @@ def _get_faculty(db: Session, user: User) -> Faculty:
     return fac
 
 
+def _scope_students(db: Session, user: User):
+    """Faculty see only their mentees; admins see everyone."""
+    if user.role == UserRole.faculty:
+        fac = _get_faculty(db, user)
+        return db.query(Student).filter(Student.mentor_id == fac.id), fac
+    return db.query(Student), None
+
+
 @router.get("/dashboard")
 def faculty_dashboard(db: Session = Depends(get_db), current_user: User = Depends(get_faculty_or_admin)):
-    students = db.query(Student).all()
+    students = _scope_students(db, current_user)[0].all()
 
     risk_dist = {"low": 0, "medium": 0, "high": 0, "unassessed": 0}
     student_summaries = []
@@ -73,6 +82,13 @@ def faculty_dashboard(db: Session = Depends(get_db), current_user: User = Depend
     at_risk = [s for s in student_summaries if s["risk_level"] in ["medium", "high"]]
     at_risk.sort(key=lambda x: x.get("dropout_probability") or 0, reverse=True)
 
+    # Intervention outcome success rate
+    scoped_ids = [s.id for s in students]
+    intv_rows = db.query(Intervention).filter(Intervention.student_id.in_(scoped_ids)).all() if scoped_ids else []
+    graded = [i for i in intv_rows if i.outcome in ("improved", "no_change", "worsened")]
+    improved = [i for i in graded if i.outcome == "improved"]
+    success_rate = round(len(improved) / len(graded) * 100, 1) if graded else 0.0
+
     return {
         "total_students": len(students),
         "risk_distribution": risk_dist,
@@ -80,6 +96,9 @@ def faculty_dashboard(db: Session = Depends(get_db), current_user: User = Depend
         "all_students": student_summaries,
         "class_avg_attendance": round(sum(total_att) / len(total_att), 1) if total_att else 0,
         "class_avg_marks": round(sum(total_marks) / len(total_marks), 1) if total_marks else 0,
+        "intervention_success_rate": success_rate,
+        "interventions_total": len(intv_rows),
+        "interventions_graded": len(graded),
     }
 
 
@@ -97,7 +116,7 @@ def list_students(
     page = max(1, int(page))
     page_size = max(1, min(100, int(page_size)))
 
-    q = db.query(Student)
+    q = _scope_students(db, current_user)[0]
     if semester:
         q = q.filter(Student.semester == semester)
     students = q.all()
@@ -159,6 +178,7 @@ def list_students(
 @router.get("/students/{student_id}/detail")
 def get_student_detail(
     student_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_faculty_or_admin)
 ):
@@ -166,14 +186,45 @@ def get_student_detail(
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
+
+    if current_user.role == UserRole.faculty:
+        fac = _get_faculty(db, current_user)
+        if student.mentor_id != fac.id:
+            raise HTTPException(status_code=403, detail="This student is not assigned to you")
+
     dashboard = _build_student_dashboard(db, student)
 
-    # Add intervention history
+    # Intervention history with before/after risk deltas
     interventions = db.query(Intervention).filter(Intervention.student_id == student_id).order_by(Intervention.created_at.desc()).all()
-    dashboard["interventions"] = [
-        {"id": i.id, "message": i.message, "is_acknowledged": i.is_acknowledged, "created_at": i.created_at.isoformat()}
-        for i in interventions
-    ]
+    intv_payload = []
+    for i in interventions:
+        before = (
+            db.query(Prediction)
+            .filter(Prediction.student_id == student_id, Prediction.created_at < i.created_at)
+            .order_by(Prediction.created_at.desc())
+            .first()
+        )
+        after = (
+            db.query(Prediction)
+            .filter(Prediction.student_id == student_id, Prediction.created_at >= i.created_at)
+            .order_by(Prediction.created_at.desc())
+            .first()
+        )
+        prob_before = before.dropout_probability if before else None
+        prob_after = after.dropout_probability if after else None
+        delta = round(prob_after - prob_before, 4) if (prob_before is not None and prob_after is not None) else None
+        intv_payload.append({
+            "id": i.id,
+            "message": i.message,
+            "is_acknowledged": i.is_acknowledged,
+            "follow_up_date": i.follow_up_date.isoformat() if i.follow_up_date else None,
+            "outcome": i.outcome,
+            "created_at": i.created_at.isoformat(),
+            "prob_before": prob_before,
+            "prob_after": prob_after,
+            "prob_delta": delta,
+        })
+    dashboard["interventions"] = intv_payload
 
     # Add referrals
     referrals = db.query(CounselorReferral).filter(CounselorReferral.student_id == student_id).all()
@@ -182,12 +233,16 @@ def get_student_detail(
         for r in referrals
     ]
 
+    log_audit(db, current_user.id, "VIEW_STUDENT", "student", student_id,
+              ip_address=request.client.host if request.client else None)
+
     return dashboard
 
 
 @router.post("/interventions", response_model=InterventionResponse)
 def send_intervention(
     data: InterventionCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_faculty_or_admin)
 ):
@@ -195,11 +250,15 @@ def send_intervention(
     student = db.query(Student).filter(Student.id == data.student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
+    if faculty and student.mentor_id != faculty.id:
+        raise HTTPException(status_code=403, detail="This student is not assigned to you")
 
     intv = Intervention(
         student_id=data.student_id,
         faculty_id=faculty.id if faculty else None,
         message=data.message,
+        follow_up_date=data.follow_up_date,
+        outcome="pending",
     )
     db.add(intv)
 
@@ -216,16 +275,65 @@ def send_intervention(
 
     db.commit()
     db.refresh(intv)
+
+    log_audit(db, current_user.id, "CREATE_INTERVENTION", "intervention", intv.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"Student {student.student_id}")
+
+    return intv
+
+
+@router.put("/interventions/{intervention_id}", response_model=InterventionResponse)
+def update_intervention(
+    intervention_id: int,
+    data: InterventionUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_faculty_or_admin)
+):
+    intv = db.query(Intervention).filter(Intervention.id == intervention_id).first()
+    if not intv:
+        raise HTTPException(status_code=404, detail="Intervention not found")
+
+    student = db.query(Student).filter(Student.id == intv.student_id).first()
+    if current_user.role == UserRole.faculty:
+        fac = _get_faculty(db, current_user)
+        if not student or student.mentor_id != fac.id:
+            raise HTTPException(status_code=403, detail="This student is not assigned to you")
+
+    if data.outcome is not None:
+        if data.outcome not in ["improved", "no_change", "worsened", "pending"]:
+            raise HTTPException(status_code=400, detail="Invalid outcome")
+        intv.outcome = data.outcome
+    if data.follow_up_date is not None:
+        intv.follow_up_date = data.follow_up_date
+    if data.message is not None:
+        intv.message = data.message
+
+    db.commit()
+    db.refresh(intv)
+
+    log_audit(db, current_user.id, "UPDATE_INTERVENTION", "intervention", intv.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"outcome={intv.outcome}")
+
     return intv
 
 
 @router.post("/referrals", response_model=CounselorReferralResponse)
 def create_referral(
     data: CounselorReferralCreate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_faculty_or_admin)
 ):
     faculty = _get_faculty(db, current_user) if current_user.role == UserRole.faculty else None
+    student = db.query(Student).filter(Student.id == data.student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    if faculty and student.mentor_id != faculty.id:
+        raise HTTPException(status_code=403, detail="This student is not assigned to you")
+
     referral = CounselorReferral(
         student_id=data.student_id,
         referred_by_id=faculty.id if faculty else None,
@@ -234,6 +342,11 @@ def create_referral(
     db.add(referral)
     db.commit()
     db.refresh(referral)
+
+    log_audit(db, current_user.id, "CREATE_REFERRAL", "referral", referral.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"Student {student.student_id}")
+
     return referral
 
 
@@ -241,17 +354,29 @@ def create_referral(
 def update_referral(
     referral_id: int,
     data: CounselorReferralUpdate,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_faculty_or_admin)
 ):
     ref = db.query(CounselorReferral).filter(CounselorReferral.id == referral_id).first()
     if not ref:
         raise HTTPException(status_code=404, detail="Referral not found")
+    if current_user.role == UserRole.faculty:
+        fac = _get_faculty(db, current_user)
+        student = db.query(Student).filter(Student.id == ref.student_id).first()
+        if not student or student.mentor_id != fac.id:
+            raise HTTPException(status_code=403, detail="This student is not assigned to you")
+
     ref.status = data.status
     if data.notes:
         ref.notes = data.notes
     db.commit()
     db.refresh(ref)
+
+    log_audit(db, current_user.id, "UPDATE_REFERRAL", "referral", ref.id,
+              ip_address=request.client.host if request.client else None,
+              details=f"status={ref.status}")
+
     return ref
 
 

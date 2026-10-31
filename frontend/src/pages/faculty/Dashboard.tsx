@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { Users, AlertTriangle, ShieldAlert, CheckCircle, RefreshCw, Download, ArrowRight, Eye, Calendar, Award } from 'lucide-react'
+import { Users, AlertTriangle, ShieldAlert, CheckCircle, RefreshCw, Download, ArrowRight, Eye, Calendar, Award, TrendingUp } from 'lucide-react'
 import { facultyApi, predictionApi, reportApi } from '../../api'
 import { Card, StatCard, Button, RiskBadge, Skeleton } from '../../components/ui'
 
@@ -106,7 +106,7 @@ export default function FacultyDashboard() {
       </Card>
 
       {/* KPI Overview */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           label="Total Enrolled Students"
           value={data?.total_students}
@@ -132,6 +132,13 @@ export default function FacultyDashboard() {
           value={`${data?.class_avg_marks}%`}
           caption="Continuous assessment mean"
           icon={<Award className="w-4 h-4" />}
+          valueClassName="text-brand-600"
+        />
+        <StatCard
+          label="Intervention Success"
+          value={`${data?.intervention_success_rate ?? 0}%`}
+          caption={`${data?.interventions_graded ?? 0} outcomes tracked`}
+          icon={<TrendingUp className="w-4 h-4" />}
           valueClassName="text-brand-600"
         />
       </div>
